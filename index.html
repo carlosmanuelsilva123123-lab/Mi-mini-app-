@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Mini App</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      max-width: 320px;
+      width: 90%;
+    }
+    h1 { font-size: 22px; margin-bottom: 8px; }
+    p  { color: #666; font-size: 14px; margin-bottom: 24px; }
+    button {
+      background: #000;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 32px;
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+    }
+    button:disabled { opacity: 0.5; }
+    #status {
+      margin-top: 16px;
+      font-size: 14px;
+      color: #333;
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>Mi Mini App</h1>
+    <p>Verifica que eres una persona real con World ID</p>
+
+    <button id="btn" onclick="verificar()">
+      Verificar con World ID
+    </button>
+
+    <div id="status"></div>
+  </div>
+
+  <!-- SDK de World MiniKit -->
+  <script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/dist/minikit.js"></script>
+
+  <script>
+    const APP_ID = "0xe38dd7c29740a9c8425ac000ff4bc54fe57454cdff00e739b351a9033b0892e2";
+
+    window.addEventListener("load", () => {
+      MiniKit.install(APP_ID);
+    });
+
+    async function verificar() {
+      const btn = document.getElementById("btn");
+      const status = document.getElementById("status");
+
+      btn.disabled = true;
+      status.textContent = "Esperando verificación...";
+
+      try {
+        const result = await MiniKit.commandsAsync.verify({
+          action: "verificacion-usuario",
+          signal: "",
+          verification_level: "orb",
+        });
+
+        if (result.finalPayload.status === "success") {
+          status.textContent = "✅ ¡Verificado! Eres una persona real.";
+        } else {
+          status.textContent = "❌ Verificación cancelada.";
+          btn.disabled = false;
+        }
+      } catch (e) {
+        status.textContent = "⚠️ Abre esto dentro de World App.";
+        btn.disabled = false;
+      }
+    }
+  </script>
+
+</body>
+</html>
