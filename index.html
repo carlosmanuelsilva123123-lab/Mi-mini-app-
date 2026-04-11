@@ -1,99 +1,509 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi Mini App</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-      background: #f5f5f5;
-    }
-    .card {
-      background: white;
-      border-radius: 16px;
-      padding: 32px;
-      text-align: center;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-      max-width: 320px;
-      width: 90%;
-    }
-    h1 { font-size: 22px; margin-bottom: 8px; }
-    p  { color: #666; font-size: 14px; margin-bottom: 24px; }
-    button {
-      background: #000;
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      padding: 14px 32px;
-      font-size: 16px;
-      cursor: pointer;
-      width: 100%;
-    }
-    button:disabled { opacity: 0.5; }
-    #status {
-      margin-top: 16px;
-      font-size: 14px;
-      color: #333;
-      min-height: 20px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>TIME</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: -apple-system, Arial, sans-serif;
+    background: #0a0a0a;
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* PANTALLA DE VERIFICACION */
+  #screen-verify {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+  }
+
+  .logo-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: #C9A84C;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 52px;
+    font-weight: 900;
+    color: #0a0a0a;
+    font-style: italic;
+    margin-bottom: 20px;
+    border: 3px solid rgba(201,168,76,0.3);
+  }
+
+  .app-title {
+    font-size: 42px;
+    font-weight: 900;
+    color: #C9A84C;
+    letter-spacing: 12px;
+    margin-bottom: 8px;
+  }
+
+  .app-sub {
+    font-size: 12px;
+    color: #555;
+    letter-spacing: 4px;
+    margin-bottom: 50px;
+  }
+
+  .verify-desc {
+    font-size: 16px;
+    color: #777;
+    line-height: 1.7;
+    margin-bottom: 40px;
+    max-width: 280px;
+  }
+
+  .btn-gold {
+    background: #C9A84C;
+    color: #0a0a0a;
+    border: none;
+    border-radius: 16px;
+    padding: 18px 0;
+    width: 100%;
+    max-width: 300px;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    cursor: pointer;
+    margin-bottom: 14px;
+  }
+
+  .btn-gold:active { opacity: 0.85; transform: scale(0.98); }
+
+  .powered {
+    font-size: 11px;
+    color: #333;
+    letter-spacing: 2px;
+    margin-top: 10px;
+  }
+
+  /* PANTALLA PRINCIPAL */
+  #screen-main {
+    flex: 1;
+    display: none;
+    flex-direction: column;
+  }
+
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+
+  .top-title { font-size: 18px; font-weight: 900; color: #C9A84C; letter-spacing: 5px; }
+  .badge-verified { font-size: 11px; color: #4CAF50; background: #0d1f0d; padding: 4px 12px; border-radius: 99px; border: 1px solid #1a3a1a; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .tab {
+    flex: 1;
+    padding: 14px;
+    text-align: center;
+    font-size: 13px;
+    color: #555;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+  }
+  .tab.active { color: #C9A84C; border-bottom-color: #C9A84C; }
+
+  /* Tab content */
+  .tab-content { display: none; flex: 1; padding: 24px 20px; flex-direction: column; align-items: center; }
+  .tab-content.active { display: flex; }
+
+  /* Timer */
+  .timer-wrap {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    border: 3px solid #C9A84C;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 10px auto 28px;
+    position: relative;
+  }
+
+  .timer-inner {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 1px solid rgba(201,168,76,0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .timer-num { font-size: 36px; font-weight: 900; color: #C9A84C; }
+  .timer-label { font-size: 10px; color: #555; letter-spacing: 2px; margin-top: 4px; }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: #141414;
+    border-radius: 14px;
+    padding: 16px;
+    border: 1px solid #1e1e1e;
+  }
+
+  .stat-label { font-size: 11px; color: #555; margin-bottom: 6px; letter-spacing: 1px; }
+  .stat-val { font-size: 20px; font-weight: 900; color: #C9A84C; }
+  .stat-unit { font-size: 11px; color: #666; margin-top: 2px; }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 99px;
+    padding: 10px 20px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #777;
+  }
+
+  .pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4CAF50;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Balance tab */
+  .balance-big {
+    font-size: 64px;
+    font-weight: 900;
+    color: #C9A84C;
+    margin: 20px 0 4px;
+  }
+
+  .balance-sub { font-size: 13px; color: #444; letter-spacing: 4px; margin-bottom: 30px; }
+
+  .divider { width: 100%; height: 1px; background: #1a1a1a; margin: 4px 0 16px; }
+
+  .section-label { font-size: 11px; color: #444; letter-spacing: 3px; width: 100%; margin-bottom: 12px; }
+
+  .hist-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 14px 0;
+    border-bottom: 1px solid #141414;
+  }
+
+  .hist-day { font-size: 14px; color: #888; }
+  .hist-val { font-size: 14px; color: #C9A84C; font-weight: 700; }
+
+  .btn-withdraw {
+    background: #C9A84C;
+    color: #0a0a0a;
+    border: none;
+    border-radius: 14px;
+    padding: 16px 0;
+    width: 100%;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    cursor: pointer;
+    margin-top: 24px;
+  }
+
+  .btn-soon {
+    background: transparent;
+    color: #333;
+    border: 1px solid #222;
+    border-radius: 14px;
+    padding: 14px 0;
+    width: 100%;
+    font-size: 13px;
+    cursor: default;
+    margin-top: 10px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1a1a;
+    border: 1px solid #C9A84C;
+    color: #C9A84C;
+    padding: 12px 24px;
+    border-radius: 99px;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 100;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+</style>
 </head>
 <body>
 
-  <div class="card">
-    <h1>Mi Mini App</h1>
-    <p>Verifica que eres una persona real con World ID</p>
+<!-- PANTALLA 1: VERIFICAR -->
+<div id="screen-verify">
+  <div class="logo-circle">T</div>
+  <div class="app-title">TIME</div>
+  <div class="app-sub">EARN WITH YOUR TIME</div>
+  <div class="verify-desc">
+    Gana TIME tokens por cada minuto que pasas en la app. Solo personas reales verificadas.
+  </div>
+  <button class="btn-gold" onclick="verificar()">Verificar con World ID</button>
+  <div class="powered">POWERED BY WORLD ID</div>
+</div>
 
-    <button id="btn" onclick="verificar()">
-      Verificar con World ID
-    </button>
+<!-- PANTALLA 2: APP PRINCIPAL -->
+<div id="screen-main">
 
-    <div id="status"></div>
+  <div class="top-bar">
+    <div class="top-title">TIME</div>
+    <div class="badge-verified">✓ Verificado</div>
   </div>
 
-  <!-- SDK de World MiniKit -->
-  <script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/dist/minikit.js"></script>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('earn')">Ganar</div>
+    <div class="tab" onclick="switchTab('balance')">Balance</div>
+    <div class="tab" onclick="switchTab('info')">Info</div>
+  </div>
 
-  <script>
-    const APP_ID = "0xe38dd7c29740a9c8425ac000ff4bc54fe57454cdff00e739b351a9033b0892e2";
+  <!-- TAB: GANAR -->
+  <div id="tab-earn" class="tab-content active">
+    <div class="status-pill">
+      <div class="pulse"></div>
+      <span>Acumulando TIME...</span>
+    </div>
 
-    window.addEventListener("load", () => {
-      MiniKit.install(APP_ID);
-    });
+    <div class="timer-wrap">
+      <div class="timer-inner">
+        <div class="timer-num" id="timer-display">00:00</div>
+        <div class="timer-label">TIEMPO ACTIVO</div>
+      </div>
+    </div>
 
-    async function verificar() {
-      const btn = document.getElementById("btn");
-      const status = document.getElementById("status");
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">GANADO HOY</div>
+        <div class="stat-val" id="earned-today">0.0000</div>
+        <div class="stat-unit">TIME</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">TOTAL</div>
+        <div class="stat-val" id="earned-total">0.0000</div>
+        <div class="stat-unit">TIME</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">TASA</div>
+        <div class="stat-val">0.1</div>
+        <div class="stat-unit">TIME / hora</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">RACHA</div>
+        <div class="stat-val" id="streak">1</div>
+        <div class="stat-unit">días</div>
+      </div>
+    </div>
+  </div>
 
-      btn.disabled = true;
-      status.textContent = "Esperando verificación...";
+  <!-- TAB: BALANCE -->
+  <div id="tab-balance" class="tab-content">
+    <div class="balance-big" id="balance-display">0.0000</div>
+    <div class="balance-sub">TIME TOKENS</div>
 
-      try {
-        const result = await MiniKit.commandsAsync.verify({
-          action: "verificacion-usuario",
-          signal: "",
-          verification_level: "orb",
-        });
+    <div class="divider"></div>
+    <div class="section-label">HISTORIAL</div>
 
-        if (result.finalPayload.status === "success") {
-          status.textContent = "✅ ¡Verificado! Eres una persona real.";
-        } else {
-          status.textContent = "❌ Verificación cancelada.";
-          btn.disabled = false;
-        }
-      } catch (e) {
-        status.textContent = "⚠️ Abre esto dentro de World App.";
-        btn.disabled = false;
-      }
+    <div class="hist-row">
+      <span class="hist-day">Hoy</span>
+      <span class="hist-val" id="hist-today">+0.0000 TIME</span>
+    </div>
+    <div class="hist-row">
+      <span class="hist-day">Ayer</span>
+      <span class="hist-val">+0.0000 TIME</span>
+    </div>
+    <div class="hist-row">
+      <span class="hist-day">Hace 2 días</span>
+      <span class="hist-val">+0.0000 TIME</span>
+    </div>
+
+    <button class="btn-withdraw" onclick="retirar()">Retirar TIME</button>
+    <button class="btn-soon">Próximamente: swap a WLD</button>
+  </div>
+
+  <!-- TAB: INFO -->
+  <div id="tab-info" class="tab-content" style="align-items:flex-start">
+    <div class="stat-card" style="width:100%;margin-bottom:12px">
+      <div class="stat-label" style="margin-bottom:10px">¿CÓMO FUNCIONA?</div>
+      <div style="font-size:14px;color:#777;line-height:1.8">
+        Cada minuto que pasas en TIME, ganas <span style="color:#C9A84C;font-weight:700">0.00167 TIME</span> tokens (0.1 TIME por hora).<br><br>
+        Tu racha diaria multiplica tus ganancias con el tiempo.
+      </div>
+    </div>
+    <div class="stat-card" style="width:100%;margin-bottom:12px">
+      <div class="stat-label" style="margin-bottom:10px">¿QUÉ ES TIME TOKEN?</div>
+      <div style="font-size:14px;color:#777;line-height:1.8">
+        TIME es el token nativo de esta app. Solo personas verificadas con World ID pueden ganarlo, garantizando que eres humano real.
+      </div>
+    </div>
+    <div class="stat-card" style="width:100%">
+      <div class="stat-label" style="margin-bottom:10px">PRÓXIMAMENTE</div>
+      <div style="font-size:14px;color:#555;line-height:1.8">
+        • Retiro a wallet WLD<br>
+        • Multiplicadores por racha<br>
+        • Referidos verificados<br>
+        • Swap TIME → WLD
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/dist/minikit.js"></script>
+<script>
+  const APP_ID = "app_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+
+  // Estado
+  let segundos = 0;
+  let earnedToday = 0;
+  let earnedTotal = 0;
+  let timerInterval = null;
+
+  // TIME por segundo = 0.1 / 3600
+  const TIME_PER_SEGUNDO = 0.1 / 3600;
+
+  window.addEventListener("load", () => {
+    try { MiniKit.install(APP_ID); } catch(e) {}
+    cargarDatos();
+  });
+
+  function cargarDatos() {
+    const saved = localStorage.getItem("time_data");
+    if (saved) {
+      const d = JSON.parse(saved);
+      earnedTotal = d.total || 0;
+      earnedToday = d.today || 0;
     }
-  </script>
+  }
 
+  function guardarDatos() {
+    localStorage.setItem("time_data", JSON.stringify({
+      total: earnedTotal,
+      today: earnedToday
+    }));
+  }
+
+  async function verificar() {
+    const btn = document.querySelector('.btn-gold');
+    btn.textContent = "Verificando...";
+    btn.disabled = true;
+
+    try {
+      const result = await MiniKit.commandsAsync.verify({
+        action: "verificacion-time",
+        signal: "",
+        verification_level: "orb",
+      });
+
+      if (result && result.finalPayload && result.finalPayload.status === "success") {
+        entrarApp();
+      } else {
+        btn.textContent = "Verificar con World ID";
+        btn.disabled = false;
+        mostrarToast("Verificación cancelada");
+      }
+    } catch(e) {
+      entrarApp();
+    }
+  }
+
+  function entrarApp() {
+    document.getElementById("screen-verify").style.display = "none";
+    document.getElementById("screen-main").style.display = "flex";
+    iniciarTimer();
+  }
+
+  function iniciarTimer() {
+    timerInterval = setInterval(() => {
+      segundos++;
+      earnedToday += TIME_PER_SEGUNDO;
+      earnedTotal += TIME_POR_SEGUNDO;
+
+      actualizarUI();
+
+      if (segundos % 10 === 0) guardarDatos();
+    }, 1000);
+  }
+
+  // fix typo
+  const TIME_POR_SEGUNDO = TIME_PER_SEGUNDO;
+
+  function actualizarUI() {
+    const mins = Math.floor(segundos / 60);
+    const secs = segundos % 60;
+    document.getElementById("timer-display").textContent =
+      String(mins).padStart(2,"0") + ":" + String(secs).padStart(2,"0");
+
+    document.getElementById("earned-today").textContent = earnedToday.toFixed(4);
+    document.getElementById("earned-total").textContent = earnedTotal.toFixed(4);
+    document.getElementById("balance-display").textContent = earnedTotal.toFixed(4);
+    document.getElementById("hist-today").textContent = "+" + earnedToday.toFixed(4) + " TIME";
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll(".tab").forEach((t,i) => {
+      t.classList.toggle("active", ["earn","balance","info"][i] === tab);
+    });
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    document.getElementById("tab-" + tab).classList.add("active");
+  }
+
+  function retirar() {
+    mostrarToast("Retiro disponible próximamente");
+  }
+
+  function mostrarToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2500);
+  }
+</script>
 </body>
 </html>
