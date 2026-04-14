@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>TIME</title>
 <style>
@@ -159,13 +160,16 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- MiniKit -->
 <script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/dist/minikit.js"></script>
 
+<!-- Firebase como módulo ES -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+  // ── FIREBASE ──────────────────────────────────────────────
   const firebaseConfig = {
     apiKey: "AIzaSyC7GfllFG3MBWb_190pi_nhakAJk4kmn5Y",
     authDomain: "time-2e941.firebaseapp.com",
@@ -174,14 +178,15 @@
     messagingSenderId: "459114330177",
     appId: "1:459114330177:web:74771a874c21060e8d2ec0"
   };
-
   const fbApp = initializeApp(firebaseConfig);
   const db = getFirestore(fbApp);
 
+  // ── CONFIG ────────────────────────────────────────────────
   const APP_ID = "app_4583460f3905a13730c3d0be5c748109";
   const TIME_POR_SEG = 0.1 / 3600;
-  const SYNC_CADA = 30;
+  const SYNC_CADA = 30; // segundos
 
+  // ── ESTADO ────────────────────────────────────────────────
   let segundos = 0;
   let earnedToday = 0;
   let earnedTotal = 0;
@@ -191,10 +196,12 @@
   let segsSinSync = 0;
   let inicioReal = null;
 
+  // ── INIT ──────────────────────────────────────────────────
   window.addEventListener("load", () => {
     try { if (typeof MiniKit !== "undefined") MiniKit.install(APP_ID); } catch(e) {}
   });
 
+  // ── VERIFICAR ─────────────────────────────────────────────
   window.verificar = async function() {
     const btn = document.getElementById("btn-verify");
     const err = document.getElementById("error-msg");
@@ -205,6 +212,7 @@
     const enWorldApp = typeof MiniKit !== "undefined" && MiniKit.isInstalled?.();
 
     if (!enWorldApp) {
+      // Modo demo (navegador normal)
       userHash = "demo_" + Math.random().toString(36).slice(2,9);
       mostrarToast("Modo demo — abre en World App");
       await cargarUsuario(userHash);
@@ -220,7 +228,7 @@
       });
 
       if (finalPayload?.status === "success") {
-        userHash = finalPayload.nullifier_hash;
+        userHash = finalPayload.nullifier_hash; // ID único por humano, no se repite
         mostrarToast("¡Verificado con World ID!");
         await cargarUsuario(userHash);
         entrarApp();
@@ -236,80 +244,101 @@
     }
   };
 
+  // ── CARGAR USUARIO DESDE FIREBASE ─────────────────────────
   async function cargarUsuario(hash) {
     const hoy = new Date().toDateString();
     try {
       const ref = doc(db, "usuarios", hash);
       const snap = await getDoc(ref);
+
       if (snap.exists()) {
         const d = snap.data();
         earnedTotal = d.total || 0;
         streak = d.streak || 1;
+
         if (d.lastDate === hoy) {
           earnedToday = d.today || 0;
         } else {
+          // Nuevo día: verificar si fue ayer para mantener racha
           const ayer = new Date();
           ayer.setDate(ayer.getDate() - 1);
-          streak = d.lastDate === ayer.toDateString() ? (d.streak||1)+1 : 1;
+          streak = d.lastDate === ayer.toDateString() ? (d.streak || 1) + 1 : 1;
           earnedToday = 0;
         }
       } else {
-        await setDoc(ref, { total:0, today:0, streak:1, lastDate:hoy, creadoEn:serverTimestamp() });
+        // Usuario nuevo
+        await setDoc(ref, {
+          total: 0, today: 0, streak: 1,
+          lastDate: hoy, creadoEn: serverTimestamp()
+        });
       }
     } catch(e) {
+      // Fallback a localStorage si Firebase falla
+      console.warn("[TIME] Firebase offline, usando backup local");
       const raw = localStorage.getItem("time_bk");
-      if (raw) { const d = JSON.parse(raw); earnedTotal=d.total||0; earnedToday=d.today||0; streak=d.streak||1; }
+      if (raw) { const d = JSON.parse(raw); earnedTotal = d.total||0; earnedToday = d.today||0; streak = d.streak||1; }
     }
   }
 
+  // ── GUARDAR EN FIREBASE ───────────────────────────────────
   async function sync() {
     if (!userHash) return;
+    const datos = { total: earnedTotal, today: earnedToday, streak, lastDate: new Date().toDateString(), ultimaSync: serverTimestamp() };
     try {
-      await updateDoc(doc(db,"usuarios",userHash), {
-        total: earnedTotal, today: earnedToday, streak,
-        lastDate: new Date().toDateString(), ultimaSync: serverTimestamp()
-      });
-      localStorage.setItem("time_bk", JSON.stringify({ total:earnedTotal, today:earnedToday, streak }));
-    } catch(e) {}
+      await updateDoc(doc(db, "usuarios", userHash), datos);
+      localStorage.setItem("time_bk", JSON.stringify({ total: earnedTotal, today: earnedToday, streak }));
+    } catch(e) { console.warn("[TIME] Error sync:", e); }
   }
 
+  // ── ENTRAR ────────────────────────────────────────────────
   function entrarApp() {
     document.getElementById("screen-verify").style.display = "none";
     document.getElementById("screen-main").style.display = "flex";
     actualizarUI();
     iniciarTimer();
+    // Guardar al salir
     window.addEventListener("beforeunload", sync);
     document.addEventListener("visibilitychange", () => { if (document.hidden) sync(); });
   }
 
+  // ── TIMER ─────────────────────────────────────────────────
   function iniciarTimer() {
     if (timerInterval) return;
-    inicioReal = Date.now();
+    inicioReal = Date.now(); // timestamp real — no manipulable
+
     timerInterval = setInterval(() => {
+      // Segundos reales desde que entró — ignora cualquier manipulación del JS
       segundos = Math.floor((Date.now() - inicioReal) / 1000);
+
       earnedToday += TIME_POR_SEG;
       earnedTotal += TIME_POR_SEG;
       segsSinSync++;
+
       actualizarUI();
+
       if (segsSinSync >= SYNC_CADA) { segsSinSync = 0; sync(); }
     }, 1000);
   }
 
+  // ── UI ────────────────────────────────────────────────────
   function actualizarUI() {
-    const m = Math.floor(segundos/60), s = segundos%60;
-    set("timer-display", pad(m)+":"+pad(s));
+    const m = Math.floor(segundos / 60), s = segundos % 60;
+    set("timer-display", pad(m) + ":" + pad(s));
+
     const arc = document.getElementById("timer-arc");
-    if (arc) arc.style.strokeDashoffset = 534 * (1 - (segundos%60)/60);
+    if (arc) arc.style.strokeDashoffset = 534 * (1 - (segundos % 60) / 60);
+
     set("earned-today", earnedToday.toFixed(4));
     set("earned-total", earnedTotal.toFixed(4));
     set("balance-display", earnedTotal.toFixed(4));
-    set("hist-today", "+"+earnedToday.toFixed(4)+" TIME");
+    set("hist-today", "+" + earnedToday.toFixed(4) + " TIME");
     set("streak-val", streak);
   }
 
   function pad(n) { return String(n).padStart(2,"0"); }
-  function set(id,v) { const e=document.getElementById(id); if(e) e.textContent=v; }
+  function set(id, v) { const e = document.getElementById(id); if(e) e.textContent = v; }
 
+  // ── TABS ──────────────────────────────────────────────────
   window.switchTab = function(tab) {
     const tabs = ["earn","balance","info"];
     document.querySelectorAll(".tab").forEach((t,i) => t.classList.toggle("active", tabs[i]===tab));
