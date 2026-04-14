@@ -6,13 +6,13 @@
 <meta name="theme-color" content="#080808">
 <title>TIME</title>
 
-<!-- MiniKit — debe cargarse PRIMERO, antes que cualquier otro script -->
+<!-- MiniKit PRIMERO — siempre antes que todo -->
 <script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/dist/minikit.js"></script>
 
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap');
 
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
   :root {
     --gold: #C9A84C;
@@ -26,118 +26,106 @@
 
   body {
     font-family: 'Space Mono', monospace;
-    background: var(--bg);
-    color: #fff;
-    min-height: 100vh;
-    min-height: -webkit-fill-available; /* iOS safe area */
-    display: flex;
-    flex-direction: column;
-    overflow-x: hidden;
+    background: var(--bg); color: #fff;
+    min-height: 100vh; min-height: -webkit-fill-available;
+    display: flex; flex-direction: column; overflow-x: hidden;
   }
 
-  /* ── PANTALLA VERIFICAR ── */
+  /* ── VERIFY ── */
   #screen-verify {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 24px;
-    text-align: center;
+    flex:1; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:40px 24px; text-align:center;
     background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(201,168,76,0.08) 0%, transparent 70%), var(--bg);
   }
 
-  .logo-ring { position: relative; width: 110px; height: 110px; margin-bottom: 28px; }
-  .logo-ring svg { position: absolute; top: 0; left: 0; animation: spin 8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .logo-ring { position:relative; width:110px; height:110px; margin-bottom:28px; }
+  .logo-ring svg { position:absolute; top:0; left:0; animation:spin 8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
   .logo-inner {
-    position: absolute; inset: 12px; border-radius: 50%;
-    background: var(--gold); display: flex; align-items: center; justify-content: center;
-    font-family: 'Bebas Neue', sans-serif; font-size: 44px; color: var(--bg);
+    position:absolute; inset:12px; border-radius:50%;
+    background:var(--gold); display:flex; align-items:center; justify-content:center;
+    font-family:'Bebas Neue',sans-serif; font-size:44px; color:var(--bg);
   }
 
-  .app-title { font-family: 'Bebas Neue', sans-serif; font-size: 56px; color: var(--gold); letter-spacing: 18px; margin-bottom: 4px; line-height: 1; }
-  .app-sub { font-size: 10px; color: var(--text-dim); letter-spacing: 5px; margin-bottom: 48px; }
-  .verify-desc { font-size: 13px; color: var(--text-mid); line-height: 1.9; margin-bottom: 40px; max-width: 260px; }
+  .app-title { font-family:'Bebas Neue',sans-serif; font-size:56px; color:var(--gold); letter-spacing:18px; margin-bottom:4px; line-height:1; }
+  .app-sub   { font-size:10px; color:var(--text-dim); letter-spacing:5px; margin-bottom:48px; }
+  .verify-desc { font-size:13px; color:var(--text-mid); line-height:1.9; margin-bottom:40px; max-width:260px; }
 
   .btn-gold {
-    background: var(--gold); color: var(--bg); border: none; border-radius: 14px;
-    padding: 18px 0; width: 100%; max-width: 300px;
-    font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700;
-    letter-spacing: 2px; cursor: pointer; margin-bottom: 14px;
-    transition: opacity 0.2s, transform 0.15s;
-    /* Evita doble-tap zoom en iOS */
-    touch-action: manipulation;
+    background:var(--gold); color:var(--bg); border:none; border-radius:14px;
+    padding:18px 0; width:100%; max-width:300px;
+    font-family:'Space Mono',monospace; font-size:13px; font-weight:700;
+    letter-spacing:2px; cursor:pointer; margin-bottom:14px;
+    transition:opacity 0.2s, transform 0.15s;
+    touch-action:manipulation;
   }
-  .btn-gold:active { opacity: 0.85; transform: scale(0.97); }
-  .btn-gold:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-  .powered { font-size: 10px; color: #2a2a2a; letter-spacing: 3px; margin-top: 12px; }
+  .btn-gold:active   { opacity:0.85; transform:scale(0.97); }
+  .btn-gold:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+  .powered   { font-size:10px; color:#2a2a2a; letter-spacing:3px; margin-top:12px; }
+  .error-msg { font-size:11px; color:#c0392b; text-align:center; margin-top:10px; letter-spacing:1px; min-height:16px; }
 
-  /* ── PANTALLA PRINCIPAL ── */
-  #screen-main { flex: 1; display: none; flex-direction: column; }
-  .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #161616; }
-  .top-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--gold); letter-spacing: 8px; }
-  .badge-verified { font-size: 10px; color: var(--green); background: rgba(76,175,80,0.08); padding: 5px 12px; border-radius: 99px; border: 1px solid rgba(76,175,80,0.2); letter-spacing: 1px; }
+  /* ── MAIN ── */
+  #screen-main { flex:1; display:none; flex-direction:column; }
+  .top-bar { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid #161616; }
+  .top-title { font-family:'Bebas Neue',sans-serif; font-size:22px; color:var(--gold); letter-spacing:8px; }
+  .badge-verified { font-size:10px; color:var(--green); background:rgba(76,175,80,0.08); padding:5px 12px; border-radius:99px; border:1px solid rgba(76,175,80,0.2); letter-spacing:1px; }
 
-  .tabs { display: flex; border-bottom: 1px solid #161616; }
-  .tab { flex: 1; padding: 14px; text-align: center; font-size: 11px; color: var(--text-dim); cursor: pointer; border-bottom: 2px solid transparent; letter-spacing: 2px; touch-action: manipulation; }
-  .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+  .tabs { display:flex; border-bottom:1px solid #161616; }
+  .tab  { flex:1; padding:14px; text-align:center; font-size:11px; color:var(--text-dim); cursor:pointer; border-bottom:2px solid transparent; letter-spacing:2px; touch-action:manipulation; }
+  .tab.active { color:var(--gold); border-bottom-color:var(--gold); }
 
-  .tab-content { display: none; flex: 1; padding: 24px 20px; flex-direction: column; align-items: center; }
-  .tab-content.active { display: flex; }
+  .tab-content { display:none; flex:1; padding:24px 20px; flex-direction:column; align-items:center; }
+  .tab-content.active { display:flex; }
 
   /* ── TIMER ── */
-  .timer-wrap { position: relative; width: 190px; height: 190px; margin: 8px auto 28px; }
-  .timer-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-  .timer-progress { transition: stroke-dashoffset 1s linear; }
-  .timer-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .timer-num { font-family: 'Bebas Neue', sans-serif; font-size: 42px; color: var(--gold); letter-spacing: 3px; line-height: 1; }
-  .timer-label { font-size: 9px; color: var(--text-dim); letter-spacing: 2px; margin-top: 4px; }
+  .timer-wrap   { position:relative; width:190px; height:190px; margin:8px auto 28px; }
+  .timer-svg    { position:absolute; top:0; left:0; width:100%; height:100%; }
+  .timer-progress { transition:stroke-dashoffset 1s linear; }
+  .timer-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .timer-num    { font-family:'Bebas Neue',sans-serif; font-size:42px; color:var(--gold); letter-spacing:3px; line-height:1; }
+  .timer-label  { font-size:9px; color:var(--text-dim); letter-spacing:2px; margin-top:4px; }
 
   /* ── STATS ── */
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 20px; }
-  .stat-card { background: var(--surface); border-radius: 14px; padding: 15px; border: 1px solid #1c1c1c; }
-  .stat-label { font-size: 9px; color: var(--text-dim); margin-bottom: 8px; letter-spacing: 2px; }
-  .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: var(--gold); letter-spacing: 1px; line-height: 1; }
-  .stat-unit { font-size: 10px; color: #444; margin-top: 3px; letter-spacing: 1px; }
+  .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; width:100%; margin-bottom:20px; }
+  .stat-card  { background:var(--surface); border-radius:14px; padding:15px; border:1px solid #1c1c1c; }
+  .stat-label { font-size:9px; color:var(--text-dim); margin-bottom:8px; letter-spacing:2px; }
+  .stat-val   { font-family:'Bebas Neue',sans-serif; font-size:26px; color:var(--gold); letter-spacing:1px; line-height:1; }
+  .stat-unit  { font-size:10px; color:#444; margin-top:3px; letter-spacing:1px; }
 
-  .status-pill { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid #1c1c1c; border-radius: 99px; padding: 10px 20px; margin-bottom: 20px; font-size: 11px; color: var(--text-mid); letter-spacing: 1px; }
-  .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 1.5s infinite; flex-shrink: 0; }
+  .status-pill { display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid #1c1c1c; border-radius:99px; padding:10px 20px; margin-bottom:20px; font-size:11px; color:var(--text-mid); letter-spacing:1px; }
+  .pulse { width:7px; height:7px; border-radius:50%; background:var(--green); animation:pulse 1.5s infinite; flex-shrink:0; }
   @keyframes pulse {
-    0%,100% { opacity:1; box-shadow: 0 0 0 0 rgba(76,175,80,0.4); }
-    50% { opacity:0.7; box-shadow: 0 0 0 4px rgba(76,175,80,0); }
+    0%,100% { opacity:1; box-shadow:0 0 0 0 rgba(76,175,80,0.4); }
+    50%      { opacity:0.7; box-shadow:0 0 0 4px rgba(76,175,80,0); }
   }
 
   /* ── BALANCE ── */
-  .balance-big { font-family: 'Bebas Neue', sans-serif; font-size: 72px; color: var(--gold); letter-spacing: 4px; margin: 20px 0 4px; line-height: 1; }
-  .balance-sub { font-size: 10px; color: #333; letter-spacing: 5px; margin-bottom: 30px; }
-  .divider { width: 100%; height: 1px; background: #161616; margin: 4px 0 16px; }
-  .section-label { font-size: 9px; color: #333; letter-spacing: 4px; width: 100%; margin-bottom: 12px; }
-  .hist-row { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 14px 0; border-bottom: 1px solid #131313; }
-  .hist-day { font-size: 13px; color: var(--text-mid); }
-  .hist-val { font-size: 13px; color: var(--gold); font-weight: 700; }
+  .balance-big { font-family:'Bebas Neue',sans-serif; font-size:72px; color:var(--gold); letter-spacing:4px; margin:20px 0 4px; line-height:1; }
+  .balance-sub { font-size:10px; color:#333; letter-spacing:5px; margin-bottom:30px; }
+  .divider     { width:100%; height:1px; background:#161616; margin:4px 0 16px; }
+  .section-label { font-size:9px; color:#333; letter-spacing:4px; width:100%; margin-bottom:12px; }
+  .hist-row { display:flex; justify-content:space-between; align-items:center; width:100%; padding:14px 0; border-bottom:1px solid #131313; }
+  .hist-day { font-size:13px; color:var(--text-mid); }
+  .hist-val { font-size:13px; color:var(--gold); font-weight:700; }
 
-  .btn-withdraw { background: var(--gold); color: var(--bg); border: none; border-radius: 14px; padding: 16px 0; width: 100%; font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 2px; cursor: pointer; margin-top: 24px; touch-action: manipulation; }
-  .btn-soon { background: transparent; color: #2a2a2a; border: 1px solid #1c1c1c; border-radius: 14px; padding: 14px 0; width: 100%; font-size: 11px; font-family: 'Space Mono', monospace; cursor: default; margin-top: 10px; letter-spacing: 1px; }
+  .btn-withdraw { background:var(--gold); color:var(--bg); border:none; border-radius:14px; padding:16px 0; width:100%; font-family:'Space Mono',monospace; font-size:13px; font-weight:700; letter-spacing:2px; cursor:pointer; margin-top:24px; touch-action:manipulation; }
+  .btn-soon     { background:transparent; color:#2a2a2a; border:1px solid #1c1c1c; border-radius:14px; padding:14px 0; width:100%; font-size:11px; font-family:'Space Mono',monospace; cursor:default; margin-top:10px; letter-spacing:1px; }
 
   /* ── INFO ── */
-  .info-card { background: var(--surface); border-radius: 14px; padding: 18px; border: 1px solid #1c1c1c; width: 100%; margin-bottom: 12px; }
-  .info-card-label { font-size: 9px; color: var(--text-dim); letter-spacing: 3px; margin-bottom: 12px; }
-  .info-card-body { font-size: 13px; color: #666; line-height: 1.9; }
-  .info-card-body span { color: var(--gold); font-weight: 700; }
+  .info-card       { background:var(--surface); border-radius:14px; padding:18px; border:1px solid #1c1c1c; width:100%; margin-bottom:12px; }
+  .info-card-label { font-size:9px; color:var(--text-dim); letter-spacing:3px; margin-bottom:12px; }
+  .info-card-body  { font-size:13px; color:#666; line-height:1.9; }
+  .info-card-body span { color:var(--gold); font-weight:700; }
 
   /* ── TOAST ── */
-  .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(10px); background: #161616; border: 1px solid var(--gold-border); color: var(--gold); padding: 12px 24px; border-radius: 99px; font-size: 12px; opacity: 0; transition: opacity 0.3s, transform 0.3s; z-index: 100; white-space: nowrap; letter-spacing: 1px; pointer-events: none; }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .error-msg { font-size: 11px; color: #c0392b; text-align: center; margin-top: 10px; letter-spacing: 1px; min-height: 16px; }
-
-  /* ── MODO DEMO BADGE ── */
-  .badge-demo { font-size: 10px; color: #C9A84C; background: rgba(201,168,76,0.08); padding: 5px 12px; border-radius: 99px; border: 1px solid rgba(201,168,76,0.2); letter-spacing: 1px; }
+  .toast { position:fixed; bottom:32px; left:50%; transform:translateX(-50%) translateY(10px); background:#161616; border:1px solid var(--gold-border); color:var(--gold); padding:12px 24px; border-radius:99px; font-size:12px; opacity:0; transition:opacity 0.3s, transform 0.3s; z-index:100; white-space:nowrap; letter-spacing:1px; pointer-events:none; }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
 
-<!-- ── PANTALLA VERIFICACIÓN ── -->
+<!-- PANTALLA VERIFICACIÓN -->
 <div id="screen-verify">
   <div class="logo-ring">
     <svg viewBox="0 0 110 110" fill="none">
@@ -163,7 +151,7 @@
   <div class="powered">POWERED BY WORLD ID</div>
 </div>
 
-<!-- ── PANTALLA PRINCIPAL ── -->
+<!-- PANTALLA PRINCIPAL -->
 <div id="screen-main">
   <div class="top-bar">
     <div class="top-title">TIME</div>
@@ -175,7 +163,6 @@
     <div class="tab" onclick="switchTab('info')">INFO</div>
   </div>
 
-  <!-- TAB: GANAR -->
   <div id="tab-earn" class="tab-content active">
     <div class="status-pill"><div class="pulse"></div><span>ACUMULANDO TIME...</span></div>
     <div class="timer-wrap">
@@ -192,95 +179,48 @@
       </div>
     </div>
     <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">GANADO HOY</div>
-        <div class="stat-val" id="earned-today">0.0000</div>
-        <div class="stat-unit">TIME</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">TOTAL</div>
-        <div class="stat-val" id="earned-total">0.0000</div>
-        <div class="stat-unit">TIME</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">TASA</div>
-        <div class="stat-val">0.1</div>
-        <div class="stat-unit">TIME / HORA</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">RACHA</div>
-        <div class="stat-val" id="streak-val">1</div>
-        <div class="stat-unit">DÍAS</div>
-      </div>
+      <div class="stat-card"><div class="stat-label">GANADO HOY</div><div class="stat-val" id="earned-today">0.0000</div><div class="stat-unit">TIME</div></div>
+      <div class="stat-card"><div class="stat-label">TOTAL</div><div class="stat-val" id="earned-total">0.0000</div><div class="stat-unit">TIME</div></div>
+      <div class="stat-card"><div class="stat-label">TASA</div><div class="stat-val">0.1</div><div class="stat-unit">TIME / HORA</div></div>
+      <div class="stat-card"><div class="stat-label">RACHA</div><div class="stat-val" id="streak-val">1</div><div class="stat-unit">DÍAS</div></div>
     </div>
   </div>
 
-  <!-- TAB: BALANCE -->
   <div id="tab-balance" class="tab-content">
     <div class="balance-big" id="balance-display">0.0000</div>
     <div class="balance-sub">TIME TOKENS</div>
     <div class="divider"></div>
     <div class="section-label">HISTORIAL</div>
-    <div class="hist-row">
-      <span class="hist-day">Hoy</span>
-      <span class="hist-val" id="hist-today">+0.0000 TIME</span>
-    </div>
-    <div class="hist-row">
-      <span class="hist-day">Ayer</span>
-      <span class="hist-val" id="hist-yesterday">+0.0000 TIME</span>
-    </div>
-    <div class="hist-row">
-      <span class="hist-day">Hace 2 días</span>
-      <span class="hist-val" id="hist-2days">+0.0000 TIME</span>
-    </div>
+    <div class="hist-row"><span class="hist-day">Hoy</span><span class="hist-val" id="hist-today">+0.0000 TIME</span></div>
+    <div class="hist-row"><span class="hist-day">Ayer</span><span class="hist-val" id="hist-yesterday">+0.0000 TIME</span></div>
+    <div class="hist-row"><span class="hist-day">Hace 2 días</span><span class="hist-val" id="hist-2days">+0.0000 TIME</span></div>
     <button class="btn-withdraw" onclick="retirar()">RETIRAR TIME</button>
     <button class="btn-soon">Próximamente: swap a WLD</button>
   </div>
 
-  <!-- TAB: INFO -->
   <div id="tab-info" class="tab-content" style="align-items:flex-start">
-    <div class="info-card">
-      <div class="info-card-label">¿CÓMO FUNCIONA?</div>
-      <div class="info-card-body">
-        Cada minuto que pasas en TIME, ganas <span>0.00167 TIME</span> (0.1 TIME por hora).<br><br>
-        Tu racha diaria multiplica tus ganancias.
-      </div>
-    </div>
-    <div class="info-card">
-      <div class="info-card-label">¿QUÉ ES TIME TOKEN?</div>
-      <div class="info-card-body">
-        Solo personas verificadas con <span>World ID</span> pueden ganarlo — sin bots, sin trampas.
-      </div>
-    </div>
-    <div class="info-card">
-      <div class="info-card-label">PRÓXIMAMENTE</div>
-      <div class="info-card-body" style="color:#333">
-        • Retiro a wallet WLD<br>
-        • Multiplicadores por racha<br>
-        • Referidos verificados<br>
-        • Swap TIME → WLD
-      </div>
-    </div>
+    <div class="info-card"><div class="info-card-label">¿CÓMO FUNCIONA?</div><div class="info-card-body">Cada minuto que pasas en TIME, ganas <span>0.00167 TIME</span> (0.1 TIME por hora).<br><br>Tu racha diaria multiplica tus ganancias.</div></div>
+    <div class="info-card"><div class="info-card-label">¿QUÉ ES TIME TOKEN?</div><div class="info-card-body">Solo personas verificadas con <span>World ID</span> pueden ganarlo — sin bots, sin trampas.</div></div>
+    <div class="info-card"><div class="info-card-label">PRÓXIMAMENTE</div><div class="info-card-body" style="color:#333">• Retiro a wallet WLD<br>• Multiplicadores por racha<br>• Referidos verificados<br>• Swap TIME → WLD</div></div>
   </div>
 </div>
 
-<!-- Toast global -->
 <div class="toast" id="toast"></div>
 
-<!-- Firebase SDK (módulos ES) -->
+<!-- Firebase SDK -->
 <script type="module">
   import { initializeApp }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  /* ═══════════════════════════════════════════════
-     CONFIGURACIÓN — reemplaza solo si cambian
-  ═══════════════════════════════════════════════ */
-  const APP_ID    = "app_d8fe914322b26e067cd72b0a5780319a"; // World App ID
-  const ACTION_ID = "verificacion-time";                    // Action registrada en Developer Portal
-  const TIME_POR_SEG = 0.1 / 3600;                         // 0.1 TIME por hora
-  const SYNC_CADA    = 30;                                  // segundos entre syncs
+  /* ══════════════════════════════════════
+     CONFIG
+  ══════════════════════════════════════ */
+  const APP_ID       = "app_d8fe914322b26e067cd72b0a5780319a";
+  const ACTION_ID    = "verificacion-time";
+  const TIME_POR_SEG = 0.1 / 3600;
+  const SYNC_CADA    = 30;
 
   const firebaseConfig = {
     apiKey:            "AIzaSyC7GfllFG3MBWb_190pi_nhakAJk4kmn5Y",
@@ -291,324 +231,265 @@
     appId:             "1:459114330177:web:74771a874c21060e8d2ec0"
   };
 
-  /* ═══════════════════════════════════════════════
+  /* ══════════════════════════════════════
      ESTADO
-  ═══════════════════════════════════════════════ */
+  ══════════════════════════════════════ */
   const fbApp = initializeApp(firebaseConfig);
   const db    = getFirestore(fbApp);
 
-  let segundos     = 0;
-  let earnedToday  = 0;
-  let earnedTotal  = 0;
-  let streak       = 1;
-  let userHash     = null;
-  let modoDemo     = false;
-  let timerInterval  = null;
-  let segsSinSync    = 0;
-  let inicioReal     = null;
-  let guardando      = false; // mutex para sync
+  let segundos    = 0;
+  let earnedToday = 0;
+  let earnedTotal = 0;
+  let streak      = 1;
+  let userHash    = null;
+  let timerInterval = null;
+  let segsSinSync   = 0;
+  let inicioReal    = null;
+  let guardando     = false;
 
-  /* ═══════════════════════════════════════════════
-     INIT — instalar MiniKit en cuanto carga la página
-  ═══════════════════════════════════════════════ */
+  /* ══════════════════════════════════════
+     HELPERS
+  ══════════════════════════════════════ */
+  const pad   = n  => String(n).padStart(2, "0");
+  const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  const lsKey = h  => "time_bk_" + h;
+
+  function toast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2800);
+  }
+  window.mostrarToast = toast;
+
+  /* ══════════════════════════════════════
+     MINIKIT — instalar lo antes posible
+  ══════════════════════════════════════ */
+  try {
+    if (typeof MiniKit !== "undefined") MiniKit.install(APP_ID);
+  } catch (e) { console.warn("[TIME] MiniKit install:", e); }
+
   window.addEventListener("load", () => {
     try {
-      if (typeof MiniKit !== "undefined") {
+      if (typeof MiniKit !== "undefined" && !MiniKit.isInstalled?.())
         MiniKit.install(APP_ID);
-      }
-    } catch (e) {
-      console.warn("[TIME] MiniKit install error:", e);
-    }
+    } catch (_) {}
   });
 
-  /* ═══════════════════════════════════════════════
-     VERIFICAR CON WORLD ID
-  ═══════════════════════════════════════════════ */
-
-  // Promesa con timeout para evitar que se quede colgado
-  function conTimeout(promesa, ms) {
-    return Promise.race([
-      promesa,
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("TIMEOUT")), ms)
-      )
-    ]);
+  /* ══════════════════════════════════════
+     DATOS LOCALES (INSTANTÁNEO)
+     Lee localStorage sin esperar red
+  ══════════════════════════════════════ */
+  function cargarLocal(hash) {
+    try {
+      const raw = localStorage.getItem(lsKey(hash));
+      if (!raw) return;
+      const d   = JSON.parse(raw);
+      const hoy = new Date().toDateString();
+      const ayer = new Date(); ayer.setDate(ayer.getDate() - 1);
+      earnedTotal = d.total || 0;
+      if (d.lastDate === hoy) {
+        earnedToday = d.today  || 0;
+        streak      = d.streak || 1;
+      } else {
+        earnedToday = 0;
+        streak = d.lastDate === ayer.toDateString() ? (d.streak || 1) + 1 : 1;
+      }
+    } catch (_) {}
   }
 
+  /* ══════════════════════════════════════
+     FIREBASE EN SEGUNDO PLANO
+     No bloquea la entrada — corre después
+  ══════════════════════════════════════ */
+  async function syncFirebaseBg(hash) {
+    const hoy  = new Date().toDateString();
+    const ayer = new Date(); ayer.setDate(ayer.getDate() - 1);
+    try {
+      const ref  = doc(db, "usuarios", hash);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const d = snap.data();
+        // Sólo actualiza si Firebase tiene más (evita retroceder ganancias)
+        if ((d.total || 0) > earnedTotal) {
+          earnedTotal = d.total;
+          if (d.lastDate === hoy) {
+            earnedToday = Math.max(earnedToday, d.today || 0);
+            streak      = d.streak || streak;
+          } else {
+            streak = d.lastDate === ayer.toDateString() ? (d.streak || 1) + 1 : streak;
+          }
+          actualizarUI();
+        }
+      } else {
+        // Usuario nuevo — crear documento
+        await setDoc(ref, {
+          total: earnedTotal, today: earnedToday, streak,
+          lastDate: hoy, creadoEn: serverTimestamp()
+        });
+      }
+    } catch (e) { console.warn("[TIME] Firebase bg:", e); }
+  }
+
+  /* ══════════════════════════════════════
+     SYNC (local + Firebase)
+  ══════════════════════════════════════ */
+  async function sync() {
+    if (!userHash || guardando) return;
+    guardando = true;
+    try {
+      const snap = { total: earnedTotal, today: earnedToday, streak, lastDate: new Date().toDateString() };
+      localStorage.setItem(lsKey(userHash), JSON.stringify(snap));
+      await updateDoc(doc(db, "usuarios", userHash), { ...snap, ultimaSync: serverTimestamp() });
+    } catch (e) { console.warn("[TIME] sync:", e); }
+    finally { guardando = false; }
+  }
+
+  /* ══════════════════════════════════════
+     VERIFICAR
+  ══════════════════════════════════════ */
   window.verificar = async function () {
     const btn = document.getElementById("btn-verify");
     const err = document.getElementById("error-msg");
-
     btn.textContent = "VERIFICANDO...";
     btn.disabled    = true;
     err.textContent = "";
 
-    const enWorldApp =
-      typeof MiniKit !== "undefined" && MiniKit.isInstalled?.();
+    // Pequeña pausa para que MiniKit termine de inicializarse
+    await new Promise(r => setTimeout(r, 80));
 
-    /* ── MODO DEMO (navegador normal) ── */
-    if (!enWorldApp) {
-      modoDemo = true;
-      userHash = "demo_" + Math.random().toString(36).slice(2, 9);
-      mostrarToast("Modo demo — abre en World App");
-      await cargarUsuario(userHash);
-      entrarApp();
+    const mkOk = typeof MiniKit !== "undefined" && MiniKit.isInstalled?.();
+
+    /* ─── NO ESTÁ EN WORLD APP ─── */
+    if (!mkOk) {
+      // Intentar igual obtener wallet (a veces isInstalled() falla pero el objeto existe)
+      const wallet = typeof MiniKit !== "undefined" ? MiniKit?.user?.walletAddress : null;
+      userHash = wallet || ("u_" + Date.now().toString(36));
+      cargarLocal(userHash);
+      entrarApp(!!wallet);
+      syncFirebaseBg(userHash);
       return;
     }
 
-    /* ── WORLD APP — intento 1: verificación ORB ── */
-    let resultado = null;
-
+    /* ─── ESTÁ EN WORLD APP — verificar ─── */
     try {
-      const resp = await conTimeout(
+      const resp = await Promise.race([
         MiniKit.commandsAsync.verify({
           action:             ACTION_ID,
           signal:             "",
           verification_level: "orb",
         }),
-        15000 // 15 segundos máximo
-      );
-      resultado = resp?.finalPayload ?? resp;
-    } catch (e) {
-      console.warn("[TIME] verify orb error:", e.message);
-    }
+        new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 20000))
+      ]);
 
-    /* ── WORLD APP — intento 2: device (si orb falló/timeout) ── */
-    if (!resultado || resultado.status !== "success") {
-      try {
-        const resp2 = await conTimeout(
-          MiniKit.commandsAsync.verify({
-            action:             ACTION_ID,
-            signal:             "",
-            verification_level: "device",
-          }),
-          15000
-        );
-        resultado = resp2?.finalPayload ?? resp2;
-      } catch (e2) {
-        console.warn("[TIME] verify device error:", e2.message);
-      }
-    }
+      const p = resp?.finalPayload ?? resp;
 
-    /* ── EVALUAR RESULTADO ── */
-    if (resultado?.status === "success") {
-      userHash = resultado.nullifier_hash;
-      mostrarToast("¡Verificado con World ID!");
-      await cargarUsuario(userHash);
-      entrarApp();
-    } else if (resultado?.status === "error" &&
-               resultado?.error_code === "already_verified") {
-      // Usuario ya verificó esta acción — se permite entrar igual
-      userHash = resultado.nullifier_hash || ("wld_" + Math.random().toString(36).slice(2, 9));
-      mostrarToast("Ya verificado — bienvenido de vuelta");
-      await cargarUsuario(userHash);
-      entrarApp();
-    } else {
-      // Cualquier otro fallo: permitir entrar como usuario World sin verificar
-      // (el nullifier no estará disponible, usamos wallet address si existe)
-      const walletAddr = MiniKit.user?.walletAddress;
-      if (walletAddr) {
-        userHash = walletAddr;
-        mostrarToast("Entrando sin verificación Orb");
-        await cargarUsuario(userHash);
-        entrarApp();
+      if (p?.status === "success") {
+        userHash = p.nullifier_hash;
+        cargarLocal(userHash);
+        entrarApp(true);
+        syncFirebaseBg(userHash);
+
+      } else if (p?.error_code === "already_verified") {
+        userHash = p.nullifier_hash || MiniKit?.user?.walletAddress || ("u_" + Date.now().toString(36));
+        cargarLocal(userHash);
+        entrarApp(true);
+        syncFirebaseBg(userHash);
+
       } else {
-        err.textContent = "No se pudo verificar. Intenta de nuevo.";
+        // Canceló o error — entrar con wallet si existe
+        const wallet = MiniKit?.user?.walletAddress;
+        if (wallet) {
+          userHash = wallet;
+          cargarLocal(userHash);
+          entrarApp(true);
+          syncFirebaseBg(userHash);
+        } else {
+          err.textContent = "Verificación cancelada. Intenta de nuevo.";
+          btn.textContent = "VERIFICAR CON WORLD ID";
+          btn.disabled    = false;
+        }
+      }
+    } catch (e) {
+      console.warn("[TIME] verify:", e.message);
+      // Timeout/error → entrar con wallet de todas formas
+      const wallet = MiniKit?.user?.walletAddress;
+      if (wallet) {
+        userHash = wallet;
+        cargarLocal(userHash);
+        entrarApp(true);
+        syncFirebaseBg(userHash);
+      } else {
+        err.textContent = "Error de conexión. Intenta de nuevo.";
         btn.textContent = "VERIFICAR CON WORLD ID";
         btn.disabled    = false;
       }
     }
   };
 
-  /* ═══════════════════════════════════════════════
-     CARGAR USUARIO DESDE FIREBASE
-  ═══════════════════════════════════════════════ */
-  async function cargarUsuario(hash) {
-    const hoy  = new Date().toDateString();
-    const ayer = new Date();
-    ayer.setDate(ayer.getDate() - 1);
-
-    try {
-      const ref  = doc(db, "usuarios", hash);
-      const snap = await getDoc(ref);
-
-      if (snap.exists()) {
-        const d = snap.data();
-        earnedTotal = d.total || 0;
-
-        if (d.lastDate === hoy) {
-          earnedToday = d.today  || 0;
-          streak      = d.streak || 1;
-        } else {
-          // Nuevo día: verificar racha
-          streak      = d.lastDate === ayer.toDateString() ? (d.streak || 1) + 1 : 1;
-          earnedToday = 0;
-        }
-      } else {
-        // Usuario nuevo — crear documento
-        await setDoc(ref, {
-          total:     0,
-          today:     0,
-          streak:    1,
-          lastDate:  hoy,
-          creadoEn:  serverTimestamp()
-        });
-      }
-    } catch (e) {
-      console.warn("[TIME] Firebase offline, usando backup local:", e);
-      // Fallback a localStorage
-      try {
-        const raw = localStorage.getItem("time_bk_" + hash);
-        if (raw) {
-          const d = JSON.parse(raw);
-          earnedTotal = d.total  || 0;
-          earnedToday = d.today  || 0;
-          streak      = d.streak || 1;
-        }
-      } catch (_) {}
-    }
-  }
-
-  /* ═══════════════════════════════════════════════
-     SYNC A FIREBASE (con mutex para evitar race conditions)
-  ═══════════════════════════════════════════════ */
-  async function sync() {
-    if (!userHash || guardando) return;
-    guardando = true;
-
-    const datos = {
-      total:      earnedTotal,
-      today:      earnedToday,
-      streak,
-      lastDate:   new Date().toDateString(),
-      ultimaSync: serverTimestamp()
-    };
-
-    try {
-      await updateDoc(doc(db, "usuarios", userHash), datos);
-      // Backup local con clave por usuario (no mezcla sesiones)
-      localStorage.setItem(
-        "time_bk_" + userHash,
-        JSON.stringify({ total: earnedTotal, today: earnedToday, streak })
-      );
-    } catch (e) {
-      console.warn("[TIME] Error sync:", e);
-    } finally {
-      guardando = false;
-    }
-  }
-
-  /* ═══════════════════════════════════════════════
-     ENTRAR A LA APP
-  ═══════════════════════════════════════════════ */
-  function entrarApp() {
+  /* ══════════════════════════════════════
+     ENTRAR — INMEDIATO, SIN ESPERAR RED
+  ══════════════════════════════════════ */
+  function entrarApp(verificado) {
     document.getElementById("screen-verify").style.display = "none";
-    const main = document.getElementById("screen-main");
-    main.style.display = "flex";
+    document.getElementById("screen-main").style.display   = "flex";
 
-    // Badge: demo vs verificado
-    if (modoDemo) {
-      const badge = document.getElementById("badge-status");
-      badge.textContent  = "DEMO";
-      badge.className    = "badge-demo";
+    // Ocultar badge si no hay verificación real
+    if (!verificado) {
+      document.getElementById("badge-status").style.display = "none";
     }
 
     actualizarUI();
     iniciarTimer();
 
-    // Guardar antes de cerrar / minimizar
     window.addEventListener("beforeunload", () => sync());
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) sync();
-    });
-
-    // World App: evento de cierre de mini app
-    if (typeof MiniKit !== "undefined") {
-      MiniKit.subscribe?.("miniapp-close", () => sync());
-    }
+    document.addEventListener("visibilitychange", () => { if (document.hidden) sync(); });
+    try { MiniKit?.subscribe?.("miniapp-close", () => sync()); } catch (_) {}
   }
 
-  /* ═══════════════════════════════════════════════
-     TIMER — basado en Date.now(), no manipulable
-  ═══════════════════════════════════════════════ */
+  /* ══════════════════════════════════════
+     TIMER
+  ══════════════════════════════════════ */
   function iniciarTimer() {
     if (timerInterval) return;
     inicioReal = Date.now();
-
     timerInterval = setInterval(() => {
-      // Segundos reales desde inicio — ignora throttling del JS
       segundos = Math.floor((Date.now() - inicioReal) / 1000);
-
       earnedToday += TIME_POR_SEG;
       earnedTotal += TIME_POR_SEG;
       segsSinSync++;
-
       actualizarUI();
-
-      if (segsSinSync >= SYNC_CADA) {
-        segsSinSync = 0;
-        sync();
-      }
+      if (segsSinSync >= SYNC_CADA) { segsSinSync = 0; sync(); }
     }, 1000);
   }
 
-  /* ═══════════════════════════════════════════════
-     ACTUALIZAR UI
-  ═══════════════════════════════════════════════ */
+  /* ══════════════════════════════════════
+     UI
+  ══════════════════════════════════════ */
   function actualizarUI() {
-    const m = Math.floor(segundos / 60);
-    const s = segundos % 60;
-    set("timer-display", pad(m) + ":" + pad(s));
-
-    // Arco circular — ciclo de 60 segundos
+    const m = Math.floor(segundos / 60), s = segundos % 60;
+    setEl("timer-display", pad(m) + ":" + pad(s));
     const arc = document.getElementById("timer-arc");
     if (arc) arc.style.strokeDashoffset = 534 * (1 - (segundos % 60) / 60);
-
-    set("earned-today",    earnedToday.toFixed(4));
-    set("earned-total",    earnedTotal.toFixed(4));
-    set("balance-display", earnedTotal.toFixed(4));
-    set("hist-today",      "+" + earnedToday.toFixed(4) + " TIME");
-    set("streak-val",      streak);
+    setEl("earned-today",    earnedToday.toFixed(4));
+    setEl("earned-total",    earnedTotal.toFixed(4));
+    setEl("balance-display", earnedTotal.toFixed(4));
+    setEl("hist-today",      "+" + earnedToday.toFixed(4) + " TIME");
+    setEl("streak-val",      streak);
   }
 
-  /* ═══════════════════════════════════════════════
-     HELPERS
-  ═══════════════════════════════════════════════ */
-  function pad(n) { return String(n).padStart(2, "0"); }
-  function set(id, v) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = v;
-  }
-
-  /* ═══════════════════════════════════════════════
+  /* ══════════════════════════════════════
      TABS
-  ═══════════════════════════════════════════════ */
+  ══════════════════════════════════════ */
   window.switchTab = function (tab) {
-    const TABS = ["earn", "balance", "info"];
-    document.querySelectorAll(".tab").forEach((t, i) =>
-      t.classList.toggle("active", TABS[i] === tab)
-    );
+    const TABS = ["earn","balance","info"];
+    document.querySelectorAll(".tab").forEach((t,i) =>
+      t.classList.toggle("active", TABS[i] === tab));
     document.querySelectorAll(".tab-content").forEach(c =>
-      c.classList.remove("active")
-    );
+      c.classList.remove("active"));
     document.getElementById("tab-" + tab)?.classList.add("active");
   };
 
-  /* ═══════════════════════════════════════════════
-     RETIRAR
-  ═══════════════════════════════════════════════ */
-  window.retirar = () => mostrarToast("Retiro disponible próximamente");
-
-  /* ═══════════════════════════════════════════════
-     TOAST
-  ═══════════════════════════════════════════════ */
-  function mostrarToast(msg) {
-    const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.classList.add("show");
-    setTimeout(() => t.classList.remove("show"), 2800);
-  }
-  window.mostrarToast = mostrarToast;
+  window.retirar = () => toast("Retiro disponible próximamente");
 </script>
 </body>
 </html>
