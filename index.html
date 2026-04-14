@@ -211,7 +211,7 @@
 <script type="module">
   import { initializeApp }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp }
+  import { getFirestore, doc, getDoc, setDoc, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   /* ══════════════════════════════════════
@@ -220,7 +220,7 @@
   const APP_ID       = "app_d8fe914322b26e067cd72b0a5780319a";
   const ACTION_ID    = "verificacion-time";
   const TIME_POR_SEG = 0.1 / 3600;
-  const SYNC_CADA    = 30;
+  const SYNC_CADA    = 10; // guardar cada 10 segundos
 
   const firebaseConfig = {
     apiKey:            "AIzaSyC7GfllFG3MBWb_190pi_nhakAJk4kmn5Y",
@@ -333,14 +333,26 @@
   /* ══════════════════════════════════════
      SYNC (local + Firebase)
   ══════════════════════════════════════ */
+  // Guardar en localStorage de forma SÍNCRONA (nunca falla aunque cierre la app)
+  function guardarLocal() {
+    if (!userHash) return;
+    try {
+      localStorage.setItem(lsKey(userHash), JSON.stringify({
+        total: earnedTotal, today: earnedToday, streak,
+        lastDate: new Date().toDateString()
+      }));
+    } catch (_) {}
+  }
+
+  // Sync completo: local (síncrono) + Firebase (asíncrono)
   async function sync() {
+    guardarLocal(); // local siempre primero — no depende de red
     if (!userHash || guardando) return;
     guardando = true;
     try {
       const snap = { total: earnedTotal, today: earnedToday, streak, lastDate: new Date().toDateString() };
-      localStorage.setItem(lsKey(userHash), JSON.stringify(snap));
-      await updateDoc(doc(db, "usuarios", userHash), { ...snap, ultimaSync: serverTimestamp() });
-    } catch (e) { console.warn("[TIME] sync:", e); }
+      await setDoc(doc(db, "usuarios", userHash), { ...snap, ultimaSync: serverTimestamp() }, { merge: true });
+    } catch (e) { console.warn("[TIME] sync Firebase:", e); }
     finally { guardando = false; }
   }
 
@@ -440,8 +452,11 @@
 
     actualizarUI();
     iniciarTimer();
+    sync(); // guardar al entrar (asegura que el doc existe en Firebase)
 
-    window.addEventListener("beforeunload", () => sync());
+    // beforeunload: guardar local SÍNCRONAMENTE (el navegador no espera promesas aquí)
+    window.addEventListener("beforeunload", () => guardarLocal());
+    // visibilitychange: sync completo cuando la app va a background
     document.addEventListener("visibilitychange", () => { if (document.hidden) sync(); });
     try { MiniKit?.subscribe?.("miniapp-close", () => sync()); } catch (_) {}
   }
