@@ -11,485 +11,118 @@
 
   :root {
     --gold: #C9A84C;
-    --gold-dim: rgba(201,168,76,0.15);
     --gold-border: rgba(201,168,76,0.25);
     --bg: #080808;
     --surface: #111111;
-    --surface2: #181818;
     --text-dim: #555;
     --text-mid: #888;
     --green: #4CAF50;
   }
 
-  body {
-    font-family: 'Space Mono', monospace;
-    background: var(--bg);
-    color: #fff;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow-x: hidden;
-  }
+  body { font-family: 'Space Mono', monospace; background: var(--bg); color: #fff; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
 
-  /* ── VERIFY SCREEN ── */
-  #screen-verify {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 24px;
-    text-align: center;
-    background:
-      radial-gradient(ellipse 60% 40% at 50% 0%, rgba(201,168,76,0.08) 0%, transparent 70%),
-      var(--bg);
-  }
+  #screen-verify { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; text-align: center; background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(201,168,76,0.08) 0%, transparent 70%), var(--bg); }
 
-  .logo-ring {
-    position: relative;
-    width: 110px;
-    height: 110px;
-    margin-bottom: 28px;
-  }
-
-  .logo-ring svg {
-    position: absolute;
-    top: 0; left: 0;
-    animation: spin 8s linear infinite;
-  }
-
+  .logo-ring { position: relative; width: 110px; height: 110px; margin-bottom: 28px; }
+  .logo-ring svg { position: absolute; top: 0; left: 0; animation: spin 8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
+  .logo-inner { position: absolute; inset: 12px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 44px; color: var(--bg); }
 
-  .logo-inner {
-    position: absolute;
-    inset: 12px;
-    border-radius: 50%;
-    background: var(--gold);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 44px;
-    color: var(--bg);
-    letter-spacing: 2px;
-  }
+  .app-title { font-family: 'Bebas Neue', sans-serif; font-size: 56px; color: var(--gold); letter-spacing: 18px; margin-bottom: 4px; line-height: 1; }
+  .app-sub { font-size: 10px; color: var(--text-dim); letter-spacing: 5px; margin-bottom: 48px; }
+  .verify-desc { font-size: 13px; color: var(--text-mid); line-height: 1.9; margin-bottom: 40px; max-width: 260px; }
 
-  .app-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 56px;
-    color: var(--gold);
-    letter-spacing: 18px;
-    margin-bottom: 4px;
-    line-height: 1;
-  }
-
-  .app-sub {
-    font-size: 10px;
-    color: var(--text-dim);
-    letter-spacing: 5px;
-    margin-bottom: 48px;
-  }
-
-  .verify-desc {
-    font-size: 13px;
-    color: var(--text-mid);
-    line-height: 1.9;
-    margin-bottom: 40px;
-    max-width: 260px;
-  }
-
-  .btn-gold {
-    background: var(--gold);
-    color: var(--bg);
-    border: none;
-    border-radius: 14px;
-    padding: 18px 0;
-    width: 100%;
-    max-width: 300px;
-    font-family: 'Space Mono', monospace;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    cursor: pointer;
-    margin-bottom: 14px;
-    transition: opacity 0.2s, transform 0.15s;
-  }
-
+  .btn-gold { background: var(--gold); color: var(--bg); border: none; border-radius: 14px; padding: 18px 0; width: 100%; max-width: 300px; font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 2px; cursor: pointer; margin-bottom: 14px; transition: opacity 0.2s, transform 0.15s; }
   .btn-gold:active { opacity: 0.85; transform: scale(0.97); }
-  .btn-gold:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-gold:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .powered { font-size: 10px; color: #2a2a2a; letter-spacing: 3px; margin-top: 12px; }
 
-  .powered {
-    font-size: 10px;
-    color: #2a2a2a;
-    letter-spacing: 3px;
-    margin-top: 12px;
-  }
+  #screen-main { flex: 1; display: none; flex-direction: column; }
+  .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #161616; }
+  .top-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--gold); letter-spacing: 8px; }
+  .badge-verified { font-size: 10px; color: var(--green); background: rgba(76,175,80,0.08); padding: 5px 12px; border-radius: 99px; border: 1px solid rgba(76,175,80,0.2); letter-spacing: 1px; }
 
-  /* ── MAIN SCREEN ── */
-  #screen-main {
-    flex: 1;
-    display: none;
-    flex-direction: column;
-  }
-
-  .top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 20px;
-    border-bottom: 1px solid #161616;
-  }
-
-  .top-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px;
-    color: var(--gold);
-    letter-spacing: 8px;
-  }
-
-  .badge-verified {
-    font-size: 10px;
-    color: var(--green);
-    background: rgba(76,175,80,0.08);
-    padding: 5px 12px;
-    border-radius: 99px;
-    border: 1px solid rgba(76,175,80,0.2);
-    letter-spacing: 1px;
-  }
-
-  /* Tabs */
-  .tabs {
-    display: flex;
-    border-bottom: 1px solid #161616;
-  }
-
-  .tab {
-    flex: 1;
-    padding: 14px;
-    text-align: center;
-    font-size: 11px;
-    color: var(--text-dim);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    letter-spacing: 2px;
-    transition: color 0.2s;
-  }
-
+  .tabs { display: flex; border-bottom: 1px solid #161616; }
+  .tab { flex: 1; padding: 14px; text-align: center; font-size: 11px; color: var(--text-dim); cursor: pointer; border-bottom: 2px solid transparent; letter-spacing: 2px; }
   .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
 
-  /* Tab content */
-  .tab-content {
-    display: none;
-    flex: 1;
-    padding: 24px 20px;
-    flex-direction: column;
-    align-items: center;
-  }
-
+  .tab-content { display: none; flex: 1; padding: 24px 20px; flex-direction: column; align-items: center; }
   .tab-content.active { display: flex; }
 
-  /* Timer circle */
-  .timer-wrap {
-    position: relative;
-    width: 190px;
-    height: 190px;
-    margin: 8px auto 28px;
-  }
+  .timer-wrap { position: relative; width: 190px; height: 190px; margin: 8px auto 28px; }
+  .timer-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+  .timer-progress { transition: stroke-dashoffset 1s linear; }
+  .timer-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .timer-num { font-family: 'Bebas Neue', sans-serif; font-size: 42px; color: var(--gold); letter-spacing: 3px; line-height: 1; }
+  .timer-label { font-size: 9px; color: var(--text-dim); letter-spacing: 2px; margin-top: 4px; }
 
-  .timer-svg {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-  }
-
-  .timer-progress {
-    transition: stroke-dashoffset 1s linear;
-  }
-
-  .timer-center {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .timer-num {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 42px;
-    color: var(--gold);
-    letter-spacing: 3px;
-    line-height: 1;
-  }
-
-  .timer-label {
-    font-size: 9px;
-    color: var(--text-dim);
-    letter-spacing: 2px;
-    margin-top: 4px;
-  }
-
-  .stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    width: 100%;
-    margin-bottom: 20px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border-radius: 14px;
-    padding: 15px;
-    border: 1px solid #1c1c1c;
-  }
-
-  .stat-label {
-    font-size: 9px;
-    color: var(--text-dim);
-    margin-bottom: 8px;
-    letter-spacing: 2px;
-  }
-
-  .stat-val {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 26px;
-    color: var(--gold);
-    letter-spacing: 1px;
-    line-height: 1;
-  }
-
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 20px; }
+  .stat-card { background: var(--surface); border-radius: 14px; padding: 15px; border: 1px solid #1c1c1c; }
+  .stat-label { font-size: 9px; color: var(--text-dim); margin-bottom: 8px; letter-spacing: 2px; }
+  .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: var(--gold); letter-spacing: 1px; line-height: 1; }
   .stat-unit { font-size: 10px; color: #444; margin-top: 3px; letter-spacing: 1px; }
 
-  .status-pill {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--surface);
-    border: 1px solid #1c1c1c;
-    border-radius: 99px;
-    padding: 10px 20px;
-    margin-bottom: 20px;
-    font-size: 11px;
-    color: var(--text-mid);
-    letter-spacing: 1px;
-  }
+  .status-pill { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid #1c1c1c; border-radius: 99px; padding: 10px 20px; margin-bottom: 20px; font-size: 11px; color: var(--text-mid); letter-spacing: 1px; }
+  .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 1.5s infinite; flex-shrink: 0; }
+  @keyframes pulse { 0%,100% { opacity:1; box-shadow: 0 0 0 0 rgba(76,175,80,0.4); } 50% { opacity:0.7; box-shadow: 0 0 0 4px rgba(76,175,80,0); } }
 
-  .pulse {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: pulse 1.5s infinite;
-    flex-shrink: 0;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(76,175,80,0.4); }
-    50% { opacity: 0.7; box-shadow: 0 0 0 4px rgba(76,175,80,0); }
-  }
-
-  /* Balance tab */
-  .balance-big {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 72px;
-    color: var(--gold);
-    letter-spacing: 4px;
-    margin: 20px 0 4px;
-    line-height: 1;
-  }
-
-  .balance-sub {
-    font-size: 10px;
-    color: #333;
-    letter-spacing: 5px;
-    margin-bottom: 30px;
-  }
-
+  .balance-big { font-family: 'Bebas Neue', sans-serif; font-size: 72px; color: var(--gold); letter-spacing: 4px; margin: 20px 0 4px; line-height: 1; }
+  .balance-sub { font-size: 10px; color: #333; letter-spacing: 5px; margin-bottom: 30px; }
   .divider { width: 100%; height: 1px; background: #161616; margin: 4px 0 16px; }
-
-  .section-label {
-    font-size: 9px;
-    color: #333;
-    letter-spacing: 4px;
-    width: 100%;
-    margin-bottom: 12px;
-  }
-
-  .hist-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    padding: 14px 0;
-    border-bottom: 1px solid #131313;
-  }
-
+  .section-label { font-size: 9px; color: #333; letter-spacing: 4px; width: 100%; margin-bottom: 12px; }
+  .hist-row { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 14px 0; border-bottom: 1px solid #131313; }
   .hist-day { font-size: 13px; color: var(--text-mid); }
   .hist-val { font-size: 13px; color: var(--gold); font-weight: 700; }
 
-  .btn-withdraw {
-    background: var(--gold);
-    color: var(--bg);
-    border: none;
-    border-radius: 14px;
-    padding: 16px 0;
-    width: 100%;
-    font-family: 'Space Mono', monospace;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    cursor: pointer;
-    margin-top: 24px;
-    transition: opacity 0.2s;
-  }
+  .btn-withdraw { background: var(--gold); color: var(--bg); border: none; border-radius: 14px; padding: 16px 0; width: 100%; font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 2px; cursor: pointer; margin-top: 24px; }
+  .btn-soon { background: transparent; color: #2a2a2a; border: 1px solid #1c1c1c; border-radius: 14px; padding: 14px 0; width: 100%; font-size: 11px; font-family: 'Space Mono', monospace; cursor: default; margin-top: 10px; letter-spacing: 1px; }
 
-  .btn-withdraw:active { opacity: 0.85; }
-
-  .btn-soon {
-    background: transparent;
-    color: #2a2a2a;
-    border: 1px solid #1c1c1c;
-    border-radius: 14px;
-    padding: 14px 0;
-    width: 100%;
-    font-size: 11px;
-    font-family: 'Space Mono', monospace;
-    cursor: default;
-    margin-top: 10px;
-    letter-spacing: 1px;
-  }
-
-  /* Info tab */
-  .info-card {
-    background: var(--surface);
-    border-radius: 14px;
-    padding: 18px;
-    border: 1px solid #1c1c1c;
-    width: 100%;
-    margin-bottom: 12px;
-  }
-
-  .info-card-label {
-    font-size: 9px;
-    color: var(--text-dim);
-    letter-spacing: 3px;
-    margin-bottom: 12px;
-  }
-
-  .info-card-body {
-    font-size: 13px;
-    color: #666;
-    line-height: 1.9;
-  }
-
+  .info-card { background: var(--surface); border-radius: 14px; padding: 18px; border: 1px solid #1c1c1c; width: 100%; margin-bottom: 12px; }
+  .info-card-label { font-size: 9px; color: var(--text-dim); letter-spacing: 3px; margin-bottom: 12px; }
+  .info-card-body { font-size: 13px; color: #666; line-height: 1.9; }
   .info-card-body span { color: var(--gold); font-weight: 700; }
 
-  /* Toast */
-  .toast {
-    position: fixed;
-    bottom: 32px;
-    left: 50%;
-    transform: translateX(-50%) translateY(10px);
-    background: #161616;
-    border: 1px solid var(--gold-border);
-    color: var(--gold);
-    padding: 12px 24px;
-    border-radius: 99px;
-    font-size: 12px;
-    opacity: 0;
-    transition: opacity 0.3s, transform 0.3s;
-    z-index: 100;
-    white-space: nowrap;
-    letter-spacing: 1px;
-    pointer-events: none;
-  }
-
-  .toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-
-  /* Error state */
-  .error-msg {
-    font-size: 11px;
-    color: #c0392b;
-    text-align: center;
-    margin-top: 10px;
-    letter-spacing: 1px;
-    min-height: 16px;
-  }
+  .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(10px); background: #161616; border: 1px solid var(--gold-border); color: var(--gold); padding: 12px 24px; border-radius: 99px; font-size: 12px; opacity: 0; transition: opacity 0.3s, transform 0.3s; z-index: 100; white-space: nowrap; letter-spacing: 1px; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .error-msg { font-size: 11px; color: #c0392b; text-align: center; margin-top: 10px; letter-spacing: 1px; min-height: 16px; }
 </style>
 </head>
 <body>
 
-<!-- PANTALLA 1: VERIFICAR -->
 <div id="screen-verify">
   <div class="logo-ring">
-    <svg viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 110 110" fill="none">
       <circle cx="55" cy="55" r="50" stroke="rgba(201,168,76,0.2)" stroke-width="1"/>
-      <circle cx="55" cy="55" r="50" stroke="url(#goldGrad)" stroke-width="1.5"
-        stroke-dasharray="8 12" stroke-linecap="round"/>
-      <defs>
-        <linearGradient id="goldGrad" x1="0" y1="0" x2="110" y2="110" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#C9A84C"/>
-          <stop offset="100%" stop-color="rgba(201,168,76,0.1)"/>
-        </linearGradient>
-      </defs>
+      <circle cx="55" cy="55" r="50" stroke="url(#g)" stroke-width="1.5" stroke-dasharray="8 12" stroke-linecap="round"/>
+      <defs><linearGradient id="g" x1="0" y1="0" x2="110" y2="110" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#C9A84C"/><stop offset="100%" stop-color="rgba(201,168,76,0.1)"/></linearGradient></defs>
     </svg>
     <div class="logo-inner">T</div>
   </div>
-
   <div class="app-title">TIME</div>
   <div class="app-sub">EARN WITH YOUR TIME</div>
-
-  <div class="verify-desc">
-    Gana TIME tokens por cada minuto que pasas en la app.<br>Solo personas reales verificadas con World ID.
-  </div>
-
-  <button class="btn-gold" id="btn-verify" onclick="verificar()">
-    VERIFICAR CON WORLD ID
-  </button>
+  <div class="verify-desc">Gana TIME tokens por cada minuto que pasas en la app.<br>Solo personas reales verificadas con World ID.</div>
+  <button class="btn-gold" id="btn-verify" onclick="verificar()">VERIFICAR CON WORLD ID</button>
   <div class="error-msg" id="error-msg"></div>
   <div class="powered">POWERED BY WORLD ID</div>
 </div>
 
-<!-- PANTALLA 2: APP PRINCIPAL -->
 <div id="screen-main">
-
   <div class="top-bar">
     <div class="top-title">TIME</div>
     <div class="badge-verified">✓ VERIFICADO</div>
   </div>
-
   <div class="tabs">
     <div class="tab active" onclick="switchTab('earn')">GANAR</div>
     <div class="tab" onclick="switchTab('balance')">BALANCE</div>
     <div class="tab" onclick="switchTab('info')">INFO</div>
   </div>
 
-  <!-- TAB: GANAR -->
   <div id="tab-earn" class="tab-content active">
-    <div class="status-pill">
-      <div class="pulse"></div>
-      <span>ACUMULANDO TIME...</span>
-    </div>
-
+    <div class="status-pill"><div class="pulse"></div><span>ACUMULANDO TIME...</span></div>
     <div class="timer-wrap">
       <svg class="timer-svg" viewBox="0 0 190 190">
-        <!-- Track -->
         <circle cx="95" cy="95" r="85" fill="none" stroke="#1a1a1a" stroke-width="6"/>
-        <!-- Progress (starts hidden, grows as time passes) -->
-        <circle cx="95" cy="95" r="85" fill="none"
-          stroke="#C9A84C" stroke-width="6"
-          stroke-linecap="round"
-          stroke-dasharray="534"
-          stroke-dashoffset="534"
-          transform="rotate(-90 95 95)"
-          id="timer-arc"
-          class="timer-progress"/>
-        <!-- Glow circle -->
+        <circle cx="95" cy="95" r="85" fill="none" stroke="#C9A84C" stroke-width="6" stroke-linecap="round" stroke-dasharray="534" stroke-dashoffset="534" transform="rotate(-90 95 95)" id="timer-arc" class="timer-progress"/>
         <circle cx="95" cy="95" r="72" fill="none" stroke="rgba(201,168,76,0.05)" stroke-width="1"/>
       </svg>
       <div class="timer-center">
@@ -497,283 +130,201 @@
         <div class="timer-label">TIEMPO ACTIVO</div>
       </div>
     </div>
-
     <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">GANADO HOY</div>
-        <div class="stat-val" id="earned-today">0.0000</div>
-        <div class="stat-unit">TIME</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">TOTAL</div>
-        <div class="stat-val" id="earned-total">0.0000</div>
-        <div class="stat-unit">TIME</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">TASA</div>
-        <div class="stat-val">0.1</div>
-        <div class="stat-unit">TIME / HORA</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">RACHA</div>
-        <div class="stat-val" id="streak-val">1</div>
-        <div class="stat-unit">DÍAS</div>
-      </div>
+      <div class="stat-card"><div class="stat-label">GANADO HOY</div><div class="stat-val" id="earned-today">0.0000</div><div class="stat-unit">TIME</div></div>
+      <div class="stat-card"><div class="stat-label">TOTAL</div><div class="stat-val" id="earned-total">0.0000</div><div class="stat-unit">TIME</div></div>
+      <div class="stat-card"><div class="stat-label">TASA</div><div class="stat-val">0.1</div><div class="stat-unit">TIME / HORA</div></div>
+      <div class="stat-card"><div class="stat-label">RACHA</div><div class="stat-val" id="streak-val">1</div><div class="stat-unit">DÍAS</div></div>
     </div>
   </div>
 
-  <!-- TAB: BALANCE -->
   <div id="tab-balance" class="tab-content">
     <div class="balance-big" id="balance-display">0.0000</div>
     <div class="balance-sub">TIME TOKENS</div>
-
     <div class="divider"></div>
     <div class="section-label">HISTORIAL</div>
-
-    <div class="hist-row">
-      <span class="hist-day">Hoy</span>
-      <span class="hist-val" id="hist-today">+0.0000 TIME</span>
-    </div>
-    <div class="hist-row">
-      <span class="hist-day">Ayer</span>
-      <span class="hist-val" id="hist-yesterday">+0.0000 TIME</span>
-    </div>
-    <div class="hist-row">
-      <span class="hist-day">Hace 2 días</span>
-      <span class="hist-val" id="hist-2days">+0.0000 TIME</span>
-    </div>
-
+    <div class="hist-row"><span class="hist-day">Hoy</span><span class="hist-val" id="hist-today">+0.0000 TIME</span></div>
+    <div class="hist-row"><span class="hist-day">Ayer</span><span class="hist-val" id="hist-yesterday">+0.0000 TIME</span></div>
+    <div class="hist-row"><span class="hist-day">Hace 2 días</span><span class="hist-val" id="hist-2days">+0.0000 TIME</span></div>
     <button class="btn-withdraw" onclick="retirar()">RETIRAR TIME</button>
     <button class="btn-soon">Próximamente: swap a WLD</button>
   </div>
 
-  <!-- TAB: INFO -->
   <div id="tab-info" class="tab-content" style="align-items:flex-start">
-    <div class="info-card">
-      <div class="info-card-label">¿CÓMO FUNCIONA?</div>
-      <div class="info-card-body">
-        Cada minuto que pasas en TIME, ganas <span>0.00167 TIME</span> tokens (0.1 TIME por hora).<br><br>
-        Tu racha diaria multiplica tus ganancias con el tiempo.
-      </div>
-    </div>
-    <div class="info-card">
-      <div class="info-card-label">¿QUÉ ES TIME TOKEN?</div>
-      <div class="info-card-body">
-        TIME es el token nativo de esta app. Solo personas verificadas con <span>World ID</span> pueden ganarlo, garantizando que eres un humano real, no un bot.
-      </div>
-    </div>
-    <div class="info-card">
-      <div class="info-card-label">PRÓXIMAMENTE</div>
-      <div class="info-card-body" style="color:#333">
-        • Retiro a wallet WLD<br>
-        • Multiplicadores por racha<br>
-        • Referidos verificados<br>
-        • Swap TIME → WLD
-      </div>
-    </div>
+    <div class="info-card"><div class="info-card-label">¿CÓMO FUNCIONA?</div><div class="info-card-body">Cada minuto que pasas en TIME, ganas <span>0.00167 TIME</span> (0.1 TIME por hora).<br><br>Tu racha diaria multiplica tus ganancias.</div></div>
+    <div class="info-card"><div class="info-card-label">¿QUÉ ES TIME TOKEN?</div><div class="info-card-body">Solo personas verificadas con <span>World ID</span> pueden ganarlo — sin bots, sin trampas.</div></div>
+    <div class="info-card"><div class="info-card-label">PRÓXIMAMENTE</div><div class="info-card-body" style="color:#333">• Retiro a wallet WLD<br>• Multiplicadores por racha<br>• Referidos verificados<br>• Swap TIME → WLD</div></div>
   </div>
-
 </div>
 
 <div class="toast" id="toast"></div>
 
-<!--
-  MiniKit SDK — cargado desde CDN oficial de Worldcoin
-  Docs: https://docs.world.org/mini-apps/quick-start/installing-minikit
--->
 <script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/dist/minikit.js"></script>
 
-<script>
-  // ─── CONFIG ───────────────────────────────────────────────
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC7GfllFG3MBWb_190pi_nhakAJk4kmn5Y",
+    authDomain: "time-2e941.firebaseapp.com",
+    projectId: "time-2e941",
+    storageBucket: "time-2e941.firebasestorage.app",
+    messagingSenderId: "459114330177",
+    appId: "1:459114330177:web:74771a874c21060e8d2ec0"
+  };
+
+  const fbApp = initializeApp(firebaseConfig);
+  const db = getFirestore(fbApp);
+
   const APP_ID = "app_4583460f3905a13730c3d0be5c748109";
+  const TIME_POR_SEG = 0.1 / 3600;
+  const SYNC_CADA = 30;
 
-  // Tasa: 0.1 TIME por hora → por segundo
-  const TIME_PER_SEGUNDO = 0.1 / 3600;
-
-  // ─── ESTADO ───────────────────────────────────────────────
   let segundos = 0;
   let earnedToday = 0;
   let earnedTotal = 0;
   let streak = 1;
+  let userHash = null;
   let timerInterval = null;
-  let verificado = false;
+  let segsSinSync = 0;
+  let inicioReal = null;
 
-  // ─── INIT ─────────────────────────────────────────────────
   window.addEventListener("load", () => {
-    // Instalar MiniKit con el APP_ID
-    try {
-      if (typeof MiniKit !== "undefined") {
-        MiniKit.install(APP_ID);
-        console.log("[TIME] MiniKit instalado OK");
-      } else {
-        console.warn("[TIME] MiniKit no disponible — modo desarrollo");
-      }
-    } catch (e) {
-      console.warn("[TIME] Error instalando MiniKit:", e);
-    }
-
-    cargarDatos();
+    try { if (typeof MiniKit !== "undefined") MiniKit.install(APP_ID); } catch(e) {}
   });
 
-  // ─── DATOS PERSISTENTES ───────────────────────────────────
-  function cargarDatos() {
-    try {
-      const raw = localStorage.getItem("time_data_v2");
-      if (!raw) return;
-      const d = JSON.parse(raw);
-
-      earnedTotal = parseFloat(d.total) || 0;
-      streak = parseInt(d.streak) || 1;
-
-      // Resetear today si el día cambió
-      const hoy = new Date().toDateString();
-      if (d.lastDate === hoy) {
-        earnedToday = parseFloat(d.today) || 0;
-      } else {
-        earnedToday = 0;
-      }
-    } catch (e) {
-      console.warn("[TIME] Error cargando datos:", e);
-    }
-  }
-
-  function guardarDatos() {
-    try {
-      localStorage.setItem("time_data_v2", JSON.stringify({
-        total: earnedTotal,
-        today: earnedToday,
-        streak: streak,
-        lastDate: new Date().toDateString()
-      }));
-    } catch (e) {}
-  }
-
-  // ─── VERIFICACIÓN WORLD ID ────────────────────────────────
-  async function verificar() {
+  window.verificar = async function() {
     const btn = document.getElementById("btn-verify");
-    const errMsg = document.getElementById("error-msg");
-
+    const err = document.getElementById("error-msg");
     btn.textContent = "VERIFICANDO...";
     btn.disabled = true;
-    errMsg.textContent = "";
+    err.textContent = "";
 
-    // Detectar si estamos dentro de World App
-    const enWorldApp = typeof MiniKit !== "undefined" && MiniKit.isInstalled && MiniKit.isInstalled();
+    const enWorldApp = typeof MiniKit !== "undefined" && MiniKit.isInstalled?.();
 
     if (!enWorldApp) {
-      // Fuera de World App: modo desarrollo / demo
-      console.warn("[TIME] No estás en World App. Entrando en modo demo.");
-      mostrarToast("Modo demo activado");
+      userHash = "demo_" + Math.random().toString(36).slice(2,9);
+      mostrarToast("Modo demo — abre en World App");
+      await cargarUsuario(userHash);
       entrarApp();
       return;
     }
 
     try {
-      // Llamar a World ID verify
       const { finalPayload } = await MiniKit.commandsAsync.verify({
-        action: "verificacion-time",   // debe coincidir con tu Developer Portal
+        action: "verificacion-time",
         signal: "",
-        verification_level: "orb",     // "orb" = verificación biométrica real
+        verification_level: "orb",
       });
 
-      if (finalPayload && finalPayload.status === "success") {
-        // ✅ Verificación exitosa
-        console.log("[TIME] Verificado con World ID:", finalPayload.nullifier_hash);
-        verificado = true;
+      if (finalPayload?.status === "success") {
+        userHash = finalPayload.nullifier_hash;
         mostrarToast("¡Verificado con World ID!");
+        await cargarUsuario(userHash);
         entrarApp();
       } else {
-        // ❌ El usuario canceló o falló
-        const motivo = finalPayload?.error_code || "cancelado";
-        errMsg.textContent = "Verificación fallida: " + motivo;
+        err.textContent = "Verificación cancelada.";
         btn.textContent = "VERIFICAR CON WORLD ID";
         btn.disabled = false;
       }
-    } catch (e) {
-      console.error("[TIME] Error en verify:", e);
-      errMsg.textContent = "Error de conexión. Intenta de nuevo.";
+    } catch(e) {
+      err.textContent = "Error de conexión. Intenta de nuevo.";
       btn.textContent = "VERIFICAR CON WORLD ID";
       btn.disabled = false;
     }
+  };
+
+  async function cargarUsuario(hash) {
+    const hoy = new Date().toDateString();
+    try {
+      const ref = doc(db, "usuarios", hash);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const d = snap.data();
+        earnedTotal = d.total || 0;
+        streak = d.streak || 1;
+        if (d.lastDate === hoy) {
+          earnedToday = d.today || 0;
+        } else {
+          const ayer = new Date();
+          ayer.setDate(ayer.getDate() - 1);
+          streak = d.lastDate === ayer.toDateString() ? (d.streak||1)+1 : 1;
+          earnedToday = 0;
+        }
+      } else {
+        await setDoc(ref, { total:0, today:0, streak:1, lastDate:hoy, creadoEn:serverTimestamp() });
+      }
+    } catch(e) {
+      const raw = localStorage.getItem("time_bk");
+      if (raw) { const d = JSON.parse(raw); earnedTotal=d.total||0; earnedToday=d.today||0; streak=d.streak||1; }
+    }
   }
 
-  // ─── ENTRAR A LA APP ──────────────────────────────────────
+  async function sync() {
+    if (!userHash) return;
+    try {
+      await updateDoc(doc(db,"usuarios",userHash), {
+        total: earnedTotal, today: earnedToday, streak,
+        lastDate: new Date().toDateString(), ultimaSync: serverTimestamp()
+      });
+      localStorage.setItem("time_bk", JSON.stringify({ total:earnedTotal, today:earnedToday, streak }));
+    } catch(e) {}
+  }
+
   function entrarApp() {
     document.getElementById("screen-verify").style.display = "none";
-    const main = document.getElementById("screen-main");
-    main.style.display = "flex";
-    iniciarTimer();
-  }
-
-  // ─── TIMER ────────────────────────────────────────────────
-  function iniciarTimer() {
-    if (timerInterval) return; // evitar doble inicio
-    timerInterval = setInterval(tick, 1000);
-  }
-
-  function tick() {
-    segundos++;
-    earnedToday += TIME_PER_SEGUNDO;
-    earnedTotal += TIME_PER_SEGUNDO;
-
+    document.getElementById("screen-main").style.display = "flex";
     actualizarUI();
-
-    // Guardar cada 10 segundos
-    if (segundos % 10 === 0) guardarDatos();
+    iniciarTimer();
+    window.addEventListener("beforeunload", sync);
+    document.addEventListener("visibilitychange", () => { if (document.hidden) sync(); });
   }
 
-  // ─── UI ───────────────────────────────────────────────────
+  function iniciarTimer() {
+    if (timerInterval) return;
+    inicioReal = Date.now();
+    timerInterval = setInterval(() => {
+      segundos = Math.floor((Date.now() - inicioReal) / 1000);
+      earnedToday += TIME_POR_SEG;
+      earnedTotal += TIME_POR_SEG;
+      segsSinSync++;
+      actualizarUI();
+      if (segsSinSync >= SYNC_CADA) { segsSinSync = 0; sync(); }
+    }, 1000);
+  }
+
   function actualizarUI() {
-    // Timer display
-    const mins = Math.floor(segundos / 60);
-    const secs = segundos % 60;
-    document.getElementById("timer-display").textContent =
-      String(mins).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
-
-    // Arco del timer (una vuelta = 60 segundos)
+    const m = Math.floor(segundos/60), s = segundos%60;
+    set("timer-display", pad(m)+":"+pad(s));
     const arc = document.getElementById("timer-arc");
-    if (arc) {
-      const CIRCUNFERENCIA = 534; // 2π × 85 ≈ 534
-      const progreso = (segundos % 60) / 60;
-      arc.style.strokeDashoffset = CIRCUNFERENCIA * (1 - progreso);
-    }
-
-    // Stats
-    setText("earned-today", earnedToday.toFixed(4));
-    setText("earned-total", earnedTotal.toFixed(4));
-    setText("balance-display", earnedTotal.toFixed(4));
-    setText("hist-today", "+" + earnedToday.toFixed(4) + " TIME");
-    setText("streak-val", streak);
+    if (arc) arc.style.strokeDashoffset = 534 * (1 - (segundos%60)/60);
+    set("earned-today", earnedToday.toFixed(4));
+    set("earned-total", earnedTotal.toFixed(4));
+    set("balance-display", earnedTotal.toFixed(4));
+    set("hist-today", "+"+earnedToday.toFixed(4)+" TIME");
+    set("streak-val", streak);
   }
 
-  function setText(id, val) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = val;
-  }
+  function pad(n) { return String(n).padStart(2,"0"); }
+  function set(id,v) { const e=document.getElementById(id); if(e) e.textContent=v; }
 
-  // ─── TABS ─────────────────────────────────────────────────
-  function switchTab(tab) {
-    const tabs = ["earn", "balance", "info"];
-    document.querySelectorAll(".tab").forEach((t, i) => {
-      t.classList.toggle("active", tabs[i] === tab);
-    });
+  window.switchTab = function(tab) {
+    const tabs = ["earn","balance","info"];
+    document.querySelectorAll(".tab").forEach((t,i) => t.classList.toggle("active", tabs[i]===tab));
     document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-    const el = document.getElementById("tab-" + tab);
-    if (el) el.classList.add("active");
-  }
+    document.getElementById("tab-"+tab)?.classList.add("active");
+  };
 
-  // ─── ACCIONES ─────────────────────────────────────────────
-  function retirar() {
-    mostrarToast("Retiro disponible próximamente");
-  }
+  window.retirar = () => mostrarToast("Retiro disponible próximamente");
 
-  // ─── TOAST ────────────────────────────────────────────────
   function mostrarToast(msg) {
     const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.classList.add("show");
+    t.textContent = msg; t.classList.add("show");
     setTimeout(() => t.classList.remove("show"), 2800);
   }
+  window.mostrarToast = mostrarToast;
 </script>
 </body>
 </html>
