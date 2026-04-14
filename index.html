@@ -399,7 +399,7 @@ const BASE_RATE    = 0.1 / 3600; // TIME por segundo sin boosts
 const SYNC_CADA    = 10;
 
 // Wallet receptora de pagos (reemplaza con la tuya)
-const PAYMENT_WALLET = "0x0000000000000000000000000000000000000000";
+const PAYMENT_WALLET = "0xbfab37c6703e853944696dc9400be77f3878df7b";
 
 const firebaseConfig = {
   apiKey:"AIzaSyC7GfllFG3MBWb_190pi_nhakAJk4kmn5Y",
@@ -839,56 +839,89 @@ window.cerrarModalOverlay = function(e) {
    COMPRAR BOOST — MiniKit Pay
 ══════════════════════════════════════════════ */
 window.comprar = async function(moneda) {
-  const b = BOOSTS[modalBoostId];
-  const btnW  = document.getElementById("modal-btn-wld");
-  const btnU  = document.getElementById("modal-btn-usdc");
-  btnW.disabled = btnU.disabled = true;
-  btnW.textContent = btnU.textContent = "PROCESANDO...";
+  const b    = BOOSTS[modalBoostId];
+  const btnW = document.getElementById("modal-btn-wld");
+  const btnU = document.getElementById("modal-btn-usdc");
 
-  const enWorldApp = typeof MiniKit!=="undefined" && MiniKit.isInstalled?.();
-
-  if (!enWorldApp) {
-    // Modo demo: activar boost directamente
-    activarBoost(modalBoostId);
-    cerrarModal();
-    toast("✓ BOOST ACTIVADO (modo demo)");
+  // Verificar que MiniKit esté disponible
+  const mkOk = typeof MiniKit !== "undefined" && MiniKit.isInstalled?.();
+  if (!mkOk) {
+    toast("Abre la app dentro de World App para pagar");
     return;
   }
 
+  btnW.disabled = btnU.disabled = true;
+  btnW.textContent = btnU.textContent = "PROCESANDO...";
+
   try {
-    const token   = moneda==="wld" ? "WLD" : "USDCE";
-    const amount  = moneda==="wld" ? b.wld  : b.usdc;
-    const refId   = "time_" + modalBoostId + "_" + Date.now();
+    // Token: WLD o USDCE (USDC en World Chain)
+    const token  = moneda === "wld" ? "WLD" : "USDCE";
+    const amount = moneda === "wld" ? b.wld  : b.usdc;
+
+    // Reference único por transacción (boostId + user + timestamp)
+    const refId = "time_" + modalBoostId + "_" + (userHash||"").slice(-6) + "_" + Date.now();
 
     const { finalPayload } = await MiniKit.commandsAsync.pay({
-      reference:  refId,
-      to:         PAYMENT_WALLET,
+      reference:   refId,
+      to:          PAYMENT_WALLET,   // tu wallet 0xbfab...
       tokens: [{
-        symbol:      token,
-        token_amount: amount,
+        symbol:       token,
+        token_amount: amount,        // string exacto del catálogo
       }],
-      description: "TIME Boost: " + b.name,
+      description: "TIME App — Boost: " + b.name,
     });
 
     if (finalPayload?.status === "success") {
+      // Guardar referencia del pago en Firebase para auditoría
+      registrarPago({
+        ref:     refId,
+        boost:   modalBoostId,
+        moneda,
+        amount,
+        token,
+        txHash:  finalPayload.transaction_hash || "",
+        usuario: userHash,
+        ts:      Date.now(),
+      });
+
       activarBoost(modalBoostId);
       cerrarModal();
       toast("✓ " + b.name + " ACTIVADO");
       sync();
+
+    } else if (finalPayload?.status === "error") {
+      const code = finalPayload?.error_code || "desconocido";
+      toast("Pago fallido: " + code);
+      btnW.disabled = btnU.disabled = false;
+      btnW.textContent = "PAGAR WLD";
+      btnU.textContent = "PAGAR USDC";
+
     } else {
+      // Cancelado por el usuario
       toast("Pago cancelado");
       btnW.disabled = btnU.disabled = false;
       btnW.textContent = "PAGAR WLD";
       btnU.textContent = "PAGAR USDC";
     }
+
   } catch(e) {
     console.warn("[TIME] pay error:", e);
-    toast("Error al procesar pago");
+    toast("Error de conexión. Intenta de nuevo.");
     btnW.disabled = btnU.disabled = false;
     btnW.textContent = "PAGAR WLD";
     btnU.textContent = "PAGAR USDC";
   }
 };
+
+/* ══════════════════════════════════════════════
+   REGISTRAR PAGO EN FIREBASE (auditoría)
+══════════════════════════════════════════════ */
+async function registrarPago(datos) {
+  try {
+    const pagoRef = doc(db, "pagos", datos.ref);
+    await setDoc(pagoRef, { ...datos, creadoEn: serverTimestamp() });
+  } catch(e) { console.warn("[TIME] registrarPago:", e); }
+}
 
 /* ══════════════════════════════════════════════
    ACTIVAR BOOST (post-pago)
