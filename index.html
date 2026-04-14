@@ -254,6 +254,16 @@
   const setEl = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
   const lsKey = h  => "time_bk_" + h;
 
+  // ID de dispositivo persistente — siempre el mismo aunque recargue
+  function getDeviceId() {
+    let id = localStorage.getItem("time_device_id");
+    if (!id) {
+      id = "dev_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+      localStorage.setItem("time_device_id", id);
+    }
+    return id;
+  }
+
   function toast(msg) {
     const t = document.getElementById("toast");
     t.textContent = msg; t.classList.add("show");
@@ -373,9 +383,9 @@
 
     /* ─── NO ESTÁ EN WORLD APP ─── */
     if (!mkOk) {
-      // Intentar igual obtener wallet (a veces isInstalled() falla pero el objeto existe)
+      // Intentar obtener wallet; si no, usar ID de dispositivo persistente
       const wallet = typeof MiniKit !== "undefined" ? MiniKit?.user?.walletAddress : null;
-      userHash = wallet || ("u_" + Date.now().toString(36));
+      userHash = wallet || getDeviceId(); // ← siempre el mismo ID
       cargarLocal(userHash);
       entrarApp(!!wallet);
       syncFirebaseBg(userHash);
@@ -402,7 +412,7 @@
         syncFirebaseBg(userHash);
 
       } else if (p?.error_code === "already_verified") {
-        userHash = p.nullifier_hash || MiniKit?.user?.walletAddress || ("u_" + Date.now().toString(36));
+        userHash = p.nullifier_hash || MiniKit?.user?.walletAddress || getDeviceId();
         cargarLocal(userHash);
         entrarApp(true);
         syncFirebaseBg(userHash);
@@ -431,9 +441,11 @@
         entrarApp(true);
         syncFirebaseBg(userHash);
       } else {
-        err.textContent = "Error de conexión. Intenta de nuevo.";
-        btn.textContent = "VERIFICAR CON WORLD ID";
-        btn.disabled    = false;
+        // Sin wallet pero en World App — usar deviceId
+        userHash = getDeviceId();
+        cargarLocal(userHash);
+        entrarApp(false);
+        syncFirebaseBg(userHash);
       }
     }
   };
