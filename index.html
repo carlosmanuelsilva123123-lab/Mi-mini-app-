@@ -6,6 +6,16 @@
 <meta name="theme-color" content="#080808">
 <title>TIME</title>
 <script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/dist/minikit.js"></script>
+<script>
+// Instalar MiniKit inmediatamente al cargar el SDK, antes del módulo de Firebase
+(function() {
+  try {
+    if (typeof MiniKit !== "undefined") {
+      MiniKit.install("app_d8fe914322b26e067cd72b0a5780319a");
+    }
+  } catch(e) { console.warn("[TIME] MiniKit early install:", e); }
+})();
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap');
 
@@ -843,14 +853,6 @@ window.comprar = async function(moneda) {
   const btnW = document.getElementById("modal-btn-wld");
   const btnU = document.getElementById("modal-btn-usdc");
 
-  // Verificar que MiniKit esté disponible
-  // Nota: isInstalled() puede devolver false/undefined incluso dentro de World App
-  // por timing del SDK, así que solo bloqueamos si MiniKit no existe en absoluto
-  if (typeof MiniKit === "undefined" || typeof MiniKit.commandsAsync?.pay !== "function") {
-    toast("Abre esta app dentro de World App para pagar");
-    return;
-  }
-
   btnW.disabled = btnU.disabled = true;
   btnW.textContent = btnU.textContent = "PROCESANDO...";
 
@@ -907,7 +909,12 @@ window.comprar = async function(moneda) {
 
   } catch(e) {
     console.warn("[TIME] pay error:", e);
-    toast("Error de conexión. Intenta de nuevo.");
+    const msg = e?.message || String(e) || "";
+    if (msg.toLowerCase().includes("not installed") || msg.toLowerCase().includes("minikit")) {
+      toast("Abre esta app dentro de World App para pagar");
+    } else {
+      toast("Error al pagar. Intenta de nuevo.");
+    }
     btnW.disabled = btnU.disabled = false;
     btnW.textContent = "PAGAR WLD";
     btnU.textContent = "PAGAR USDC";
