@@ -5,16 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#080808">
 <title>TIME</title>
-<script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/dist/minikit.js"></script>
-<script>
-// Instalar MiniKit inmediatamente al cargar el SDK, antes del módulo de Firebase
-(function() {
-  try {
-    if (typeof MiniKit !== "undefined") {
-      MiniKit.install("app_d8fe914322b26e067cd72b0a5780319a");
-    }
-  } catch(e) { console.warn("[TIME] MiniKit early install:", e); }
-})();
+<script type="module">
+  // Importar SDK oficial con la nueva API
+  import { MiniKit, Tokens, tokenToDecimals } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/+esm";
+  window.MiniKit = MiniKit;
+  window.Tokens = Tokens;
+  window.tokenToDecimals = tokenToDecimals;
+  try { MiniKit.install("app_d8fe914322b26e067cd72b0a5780319a"); } catch(e) { console.warn("[TIME] install:", e); }
 </script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap');
@@ -628,12 +625,8 @@ async function sync() {
 }
 
 /* ══════════════════════════════════════════════
-   MINIKIT — instalar inmediato
+   MINIKIT — ya instalado en script superior
 ══════════════════════════════════════════════ */
-try { if (typeof MiniKit!=="undefined") MiniKit.install(APP_ID); } catch(e) {}
-window.addEventListener("load", () => {
-  try { if (typeof MiniKit!=="undefined" && !MiniKit.isInstalled?.()) MiniKit.install(APP_ID); } catch(_) {}
-});
 
 /* ══════════════════════════════════════════════
    VERIFICAR
@@ -846,7 +839,7 @@ window.cerrarModalOverlay = function(e) {
 };
 
 /* ══════════════════════════════════════════════
-   COMPRAR BOOST — MiniKit Pay
+   COMPRAR BOOST — MiniKit Pay (nueva API oficial)
 ══════════════════════════════════════════════ */
 window.comprar = async function(moneda) {
   const b    = BOOSTS[modalBoostId];
@@ -856,68 +849,67 @@ window.comprar = async function(moneda) {
   btnW.disabled = btnU.disabled = true;
   btnW.textContent = btnU.textContent = "PROCESANDO...";
 
+  const resetBtns = () => {
+    btnW.disabled = btnU.disabled = false;
+    btnW.textContent = "PAGAR WLD";
+    btnU.textContent = "PAGAR USDC";
+  };
+
   try {
-    // Token: WLD o USDCE (USDC en World Chain)
-    const token  = moneda === "wld" ? "WLD" : "USDCE";
-    const amount = moneda === "wld" ? b.wld  : b.usdc;
+    const mk = window.MiniKit;
+    const TD = window.tokenToDecimals;
+    const TK = window.Tokens;
 
-    // Reference único por transacción (boostId + user + timestamp)
-    const refId = "time_" + modalBoostId + "_" + (userHash||"").slice(-6) + "_" + Date.now();
+    if (!mk) { toast("SDK no cargado, intenta de nuevo"); resetBtns(); return; }
 
-    const { finalPayload } = await MiniKit.commandsAsync.pay({
+    // Montos en decimales correctos (WLD=18 dec, USDC=6 dec)
+    const isWld      = moneda === "wld";
+    const symbol     = isWld ? TK.WLD : TK.USDC;
+    const rawAmount  = isWld ? parseFloat(b.wld) : parseFloat(b.usdc);
+    const tokenAmt   = TD(rawAmount, symbol).toString();
+
+    // Reference único
+    const refId = "time_" + modalBoostId + "_" + (userHash||"anon").slice(-6) + "_" + Date.now();
+
+    const result = await mk.pay({
       reference:   refId,
-      to:          PAYMENT_WALLET,   // tu wallet 0xbfab...
-      tokens: [{
-        symbol:       token,
-        token_amount: amount,        // string exacto del catálogo
-      }],
+      to:          PAYMENT_WALLET,
+      tokens: [{ symbol, token_amount: tokenAmt }],
       description: "TIME App — Boost: " + b.name,
+      fallback: () => {
+        toast("Completa el pago dentro de World App");
+      },
     });
 
-    if (finalPayload?.status === "success") {
-      // Guardar referencia del pago en Firebase para auditoría
-      registrarPago({
-        ref:     refId,
-        boost:   modalBoostId,
-        moneda,
-        amount,
-        token,
-        txHash:  finalPayload.transaction_hash || "",
-        usuario: userHash,
-        ts:      Date.now(),
-      });
+    // La nueva API devuelve { executedWith, data }
+    const data = result?.data ?? result;
 
+    if (result?.executedWith === "minikit" || data?.transactionId || data?.transaction_hash || data?.status === "success") {
+      const txHash = data?.transactionId || data?.transaction_hash || "";
+      registrarPago({
+        ref: refId, boost: modalBoostId, moneda,
+        amount: rawAmount.toString(), token: isWld ? "WLD" : "USDC",
+        txHash, usuario: userHash, ts: Date.now(),
+      });
       activarBoost(modalBoostId);
       cerrarModal();
       toast("✓ " + b.name + " ACTIVADO");
       sync();
 
-    } else if (finalPayload?.status === "error") {
-      const code = finalPayload?.error_code || "desconocido";
+    } else if (data?.status === "error" || data?.error_code) {
+      const code = data?.error_code || "error";
       toast("Pago fallido: " + code);
-      btnW.disabled = btnU.disabled = false;
-      btnW.textContent = "PAGAR WLD";
-      btnU.textContent = "PAGAR USDC";
+      resetBtns();
 
     } else {
-      // Cancelado por el usuario
       toast("Pago cancelado");
-      btnW.disabled = btnU.disabled = false;
-      btnW.textContent = "PAGAR WLD";
-      btnU.textContent = "PAGAR USDC";
+      resetBtns();
     }
 
   } catch(e) {
     console.warn("[TIME] pay error:", e);
-    const msg = e?.message || String(e) || "";
-    if (msg.toLowerCase().includes("not installed") || msg.toLowerCase().includes("minikit")) {
-      toast("Abre esta app dentro de World App para pagar");
-    } else {
-      toast("Error al pagar. Intenta de nuevo.");
-    }
-    btnW.disabled = btnU.disabled = false;
-    btnW.textContent = "PAGAR WLD";
-    btnU.textContent = "PAGAR USDC";
+    toast("Error: " + (e?.message || "intenta de nuevo"));
+    resetBtns();
   }
 };
 
