@@ -324,6 +324,17 @@
   /* ═══════════════════════════════════════════════
      VERIFICAR CON WORLD ID
   ═══════════════════════════════════════════════ */
+
+  // Promesa con timeout para evitar que se quede colgado
+  function conTimeout(promesa, ms) {
+    return Promise.race([
+      promesa,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("TIMEOUT")), ms)
+      )
+    ]);
+  }
+
   window.verificar = async function () {
     const btn = document.getElementById("btn-verify");
     const err = document.getElementById("error-msg");
@@ -345,30 +356,67 @@
       return;
     }
 
-    /* ── WORLD APP ── */
-    try {
-      const { finalPayload } = await MiniKit.commandsAsync.verify({
-        action:             ACTION_ID,
-        signal:             "",           // opcional: añade contexto extra
-        verification_level: "orb",        // máxima seguridad anti-Sybil
-      });
+    /* ── WORLD APP — intento 1: verificación ORB ── */
+    let resultado = null;
 
-      if (finalPayload?.status === "success") {
-        // nullifier_hash: ID único por (acción × usuario) — no revela identidad
-        userHash = finalPayload.nullifier_hash;
-        mostrarToast("¡Verificado con World ID!");
+    try {
+      const resp = await conTimeout(
+        MiniKit.commandsAsync.verify({
+          action:             ACTION_ID,
+          signal:             "",
+          verification_level: "orb",
+        }),
+        15000 // 15 segundos máximo
+      );
+      resultado = resp?.finalPayload ?? resp;
+    } catch (e) {
+      console.warn("[TIME] verify orb error:", e.message);
+    }
+
+    /* ── WORLD APP — intento 2: device (si orb falló/timeout) ── */
+    if (!resultado || resultado.status !== "success") {
+      try {
+        const resp2 = await conTimeout(
+          MiniKit.commandsAsync.verify({
+            action:             ACTION_ID,
+            signal:             "",
+            verification_level: "device",
+          }),
+          15000
+        );
+        resultado = resp2?.finalPayload ?? resp2;
+      } catch (e2) {
+        console.warn("[TIME] verify device error:", e2.message);
+      }
+    }
+
+    /* ── EVALUAR RESULTADO ── */
+    if (resultado?.status === "success") {
+      userHash = resultado.nullifier_hash;
+      mostrarToast("¡Verificado con World ID!");
+      await cargarUsuario(userHash);
+      entrarApp();
+    } else if (resultado?.status === "error" &&
+               resultado?.error_code === "already_verified") {
+      // Usuario ya verificó esta acción — se permite entrar igual
+      userHash = resultado.nullifier_hash || ("wld_" + Math.random().toString(36).slice(2, 9));
+      mostrarToast("Ya verificado — bienvenido de vuelta");
+      await cargarUsuario(userHash);
+      entrarApp();
+    } else {
+      // Cualquier otro fallo: permitir entrar como usuario World sin verificar
+      // (el nullifier no estará disponible, usamos wallet address si existe)
+      const walletAddr = MiniKit.user?.walletAddress;
+      if (walletAddr) {
+        userHash = walletAddr;
+        mostrarToast("Entrando sin verificación Orb");
         await cargarUsuario(userHash);
         entrarApp();
       } else {
-        err.textContent   = "Verificación cancelada.";
-        btn.textContent   = "VERIFICAR CON WORLD ID";
-        btn.disabled      = false;
+        err.textContent = "No se pudo verificar. Intenta de nuevo.";
+        btn.textContent = "VERIFICAR CON WORLD ID";
+        btn.disabled    = false;
       }
-    } catch (e) {
-      console.error("[TIME] verify error:", e);
-      err.textContent = "Error de verificación. Intenta de nuevo.";
-      btn.textContent = "VERIFICAR CON WORLD ID";
-      btn.disabled    = false;
     }
   };
 
