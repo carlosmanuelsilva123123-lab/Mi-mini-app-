@@ -5,13 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#080808">
 <title>TIME</title>
-<script type="module">
-  // Importar SDK oficial con la nueva API
-  import { MiniKit, Tokens, tokenToDecimals } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/+esm";
-  window.MiniKit = MiniKit;
-  window.Tokens = Tokens;
-  window.tokenToDecimals = tokenToDecimals;
-  try { MiniKit.install("app_d8fe914322b26e067cd72b0a5780319a"); } catch(e) { console.warn("[TIME] install:", e); }
+<script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/dist/minikit.js"></script>
+<script>
+// DEBUG: panel visible en pantalla
+window._dbg = function(msg) {
+  console.log("[TIME-DBG]", msg);
+  let p = document.getElementById("debug-panel");
+  if (!p) {
+    p = document.createElement("div");
+    p.id = "debug-panel";
+    p.style.cssText = "position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:6px;z-index:9999;max-height:120px;overflow-y:auto;font-family:monospace;border-top:1px solid #0f0";
+    document.body.appendChild(p);
+  }
+  p.innerHTML += "<div>" + String(msg) + "</div>";
+  p.scrollTop = p.scrollHeight;
+};
+window.addEventListener("load", function() {
+  window._dbg("SDK loaded: " + (typeof MiniKit));
+  if (typeof MiniKit !== "undefined") {
+    window._dbg("MiniKit keys: " + Object.keys(MiniKit).join(","));
+    window._dbg("isInstalled: " + MiniKit.isInstalled?.());
+    window._dbg("commandsAsync: " + (typeof MiniKit.commandsAsync));
+    window._dbg("pay fn: " + (typeof MiniKit.pay));
+    window._dbg("commands: " + (typeof MiniKit.commands));
+    try {
+      MiniKit.install("app_d8fe914322b26e067cd72b0a5780319a");
+      window._dbg("install OK, isInstalled now: " + MiniKit.isInstalled?.());
+    } catch(e) { window._dbg("install ERROR: " + e.message); }
+  }
+});
 </script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap');
@@ -625,8 +647,12 @@ async function sync() {
 }
 
 /* ══════════════════════════════════════════════
-   MINIKIT — ya instalado en script superior
+   MINIKIT — instalar inmediato
 ══════════════════════════════════════════════ */
+try { if (typeof MiniKit!=="undefined") MiniKit.install(APP_ID); } catch(e) {}
+window.addEventListener("load", () => {
+  try { if (typeof MiniKit!=="undefined" && !MiniKit.isInstalled?.()) MiniKit.install(APP_ID); } catch(_) {}
+});
 
 /* ══════════════════════════════════════════════
    VERIFICAR
@@ -839,76 +865,113 @@ window.cerrarModalOverlay = function(e) {
 };
 
 /* ══════════════════════════════════════════════
-   COMPRAR BOOST — MiniKit Pay (nueva API oficial)
+   COMPRAR BOOST — MiniKit Pay (debug + multi-API)
 ══════════════════════════════════════════════ */
 window.comprar = async function(moneda) {
   const b    = BOOSTS[modalBoostId];
   const btnW = document.getElementById("modal-btn-wld");
   const btnU = document.getElementById("modal-btn-usdc");
-
-  btnW.disabled = btnU.disabled = true;
-  btnW.textContent = btnU.textContent = "PROCESANDO...";
-
   const resetBtns = () => {
     btnW.disabled = btnU.disabled = false;
     btnW.textContent = "PAGAR WLD";
     btnU.textContent = "PAGAR USDC";
   };
 
+  btnW.disabled = btnU.disabled = true;
+  btnW.textContent = btnU.textContent = "PROCESANDO...";
+
+  _dbg("comprar() llamado, moneda=" + moneda);
+  _dbg("MiniKit type: " + typeof MiniKit);
+
+  if (typeof MiniKit === "undefined") {
+    _dbg("ERROR: MiniKit undefined");
+    toast("Error: SDK no disponible");
+    resetBtns(); return;
+  }
+
+  _dbg("isInstalled: " + MiniKit.isInstalled?.());
+  _dbg("commandsAsync: " + typeof MiniKit.commandsAsync);
+  _dbg("commandsAsync.pay: " + typeof MiniKit.commandsAsync?.pay);
+  _dbg("MiniKit.pay: " + typeof MiniKit.pay);
+
+  const isWld   = moneda === "wld";
+  const amount  = isWld ? b.wld : b.usdc;
+  const refId   = "time_" + modalBoostId + "_" + (userHash||"anon").slice(-6) + "_" + Date.now();
+
+  // Calcular token_amount en decimales correctos
+  // WLD = 18 decimales, USDC = 6 decimales
+  const rawNum  = parseFloat(amount);
+  const decimals = isWld ? 18 : 6;
+  const tokenAmt = BigInt(Math.round(rawNum * Math.pow(10, decimals))).toString();
+
+  const payload = {
+    reference:   refId,
+    to:          PAYMENT_WALLET,
+    tokens: [{
+      symbol:       isWld ? "WLD" : "USDC",
+      token_amount: tokenAmt,
+    }],
+    description: "TIME App — Boost: " + b.name,
+  };
+
+  _dbg("payload: " + JSON.stringify(payload));
+
   try {
-    const mk = window.MiniKit;
-    const TD = window.tokenToDecimals;
-    const TK = window.Tokens;
+    let result;
 
-    if (!mk) { toast("SDK no cargado, intenta de nuevo"); resetBtns(); return; }
+    // Intentar nueva API primero: MiniKit.pay()
+    if (typeof MiniKit.pay === "function") {
+      _dbg("Usando MiniKit.pay()");
+      result = await MiniKit.pay(payload);
+      _dbg("result: " + JSON.stringify(result));
 
-    // Montos en decimales correctos (WLD=18 dec, USDC=6 dec)
-    const isWld      = moneda === "wld";
-    const symbol     = isWld ? TK.WLD : TK.USDC;
-    const rawAmount  = isWld ? parseFloat(b.wld) : parseFloat(b.usdc);
-    const tokenAmt   = TD(rawAmount, symbol).toString();
+    // Fallback: API vieja MiniKit.commandsAsync.pay()
+    } else if (typeof MiniKit.commandsAsync?.pay === "function") {
+      _dbg("Usando commandsAsync.pay()");
+      const r = await MiniKit.commandsAsync.pay(payload);
+      _dbg("result raw: " + JSON.stringify(r));
+      result = r?.finalPayload ?? r;
 
-    // Reference único
-    const refId = "time_" + modalBoostId + "_" + (userHash||"anon").slice(-6) + "_" + Date.now();
+    } else {
+      _dbg("ERROR: ninguna función pay encontrada");
+      _dbg("Keys MiniKit: " + Object.keys(MiniKit).join(","));
+      toast("Error: función pay no disponible");
+      resetBtns(); return;
+    }
 
-    const result = await mk.pay({
-      reference:   refId,
-      to:          PAYMENT_WALLET,
-      tokens: [{ symbol, token_amount: tokenAmt }],
-      description: "TIME App — Boost: " + b.name,
-      fallback: () => {
-        toast("Completa el pago dentro de World App");
-      },
-    });
+    // Detectar éxito en cualquier formato de respuesta
+    const data = result?.data ?? result?.finalPayload ?? result;
+    _dbg("data final: " + JSON.stringify(data));
 
-    // La nueva API devuelve { executedWith, data }
-    const data = result?.data ?? result;
+    const exito = result?.executedWith === "minikit"
+      || data?.status === "success"
+      || data?.transactionId
+      || data?.transaction_hash
+      || data?.transaction_id;
 
-    if (result?.executedWith === "minikit" || data?.transactionId || data?.transaction_hash || data?.status === "success") {
-      const txHash = data?.transactionId || data?.transaction_hash || "";
-      registrarPago({
-        ref: refId, boost: modalBoostId, moneda,
-        amount: rawAmount.toString(), token: isWld ? "WLD" : "USDC",
-        txHash, usuario: userHash, ts: Date.now(),
-      });
+    if (exito) {
+      const txHash = data?.transactionId || data?.transaction_id || data?.transaction_hash || "";
+      registrarPago({ ref:refId, boost:modalBoostId, moneda, amount, token:isWld?"WLD":"USDC", txHash, usuario:userHash, ts:Date.now() });
       activarBoost(modalBoostId);
       cerrarModal();
       toast("✓ " + b.name + " ACTIVADO");
       sync();
 
-    } else if (data?.status === "error" || data?.error_code) {
-      const code = data?.error_code || "error";
+    } else if (data?.error_code || data?.status === "error") {
+      const code = data?.error_code || data?.status || "error";
+      _dbg("Pago fallido: " + code);
       toast("Pago fallido: " + code);
       resetBtns();
 
     } else {
+      _dbg("Cancelado o resultado desconocido");
       toast("Pago cancelado");
       resetBtns();
     }
 
   } catch(e) {
-    console.warn("[TIME] pay error:", e);
-    toast("Error: " + (e?.message || "intenta de nuevo"));
+    _dbg("EXCEPCION: " + e.message + " | " + e.stack);
+    toast("Error: " + e.message);
     resetBtns();
   }
 };
