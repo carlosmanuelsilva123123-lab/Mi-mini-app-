@@ -844,9 +844,10 @@ window.comprar = async function(moneda) {
   const btnU = document.getElementById("modal-btn-usdc");
 
   // Verificar que MiniKit esté disponible
-  const mkOk = typeof MiniKit !== "undefined" && MiniKit.isInstalled?.();
-  if (!mkOk) {
-    toast("Abre la app dentro de World App para pagar");
+  // Nota: isInstalled() puede devolver false/undefined incluso dentro de World App
+  // por timing del SDK, así que solo bloqueamos si MiniKit no existe en absoluto
+  if (typeof MiniKit === "undefined" || typeof MiniKit.commandsAsync?.pay !== "function") {
+    toast("Abre esta app dentro de World App para pagar");
     return;
   }
 
