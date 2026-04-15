@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#080808">
+<title>TIME</title>
+<script>
+// Shim MiniKit para cuando el SDK no carga (navegador normal)
+// En World App el objeto MiniKit viene inyectado por la propia app
+window.__mkReady = false;
+</script>
+<script type="module" src="/main.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --gold:#C9A84C; --gold-border:rgba(201,168,76,0.25);
+  --bg:#080808; --surface:#111; --surface2:#161616;
+  --text-dim:#555; --text-mid:#888;
+  --green:#4CAF50; --red:#e74c3c;
+  --blue:#4A9EFF; --purple:#9B59B6;
+  --orange:#E67E22;
+}
+body{font-family:'Space Mono',monospace;background:var(--bg);color:#fff;min-height:100vh;min-height:-webkit-fill-available;display:flex;flex-direction:column;overflow-x:hidden}
+
+/* ── VERIFY ── */
+#screen-verify{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(201,168,76,.08) 0%,transparent 70%),var(--bg)}
+.logo-ring{position:relative;width:110px;height:110px;margin-bottom:28px}
+.logo-ring svg{position:absolute;top:0;left:0;animation:spin 8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.logo-inner{position:absolute;inset:12px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:44px;color:var(--bg)}
+.app-title{font-family:'Bebas Neue',sans-serif;font-size:56px;color:var(--gold);letter-spacing:18px;margin-bottom:4px;line-height:1}
+.app-sub{font-size:10px;color:var(--text-dim);letter-spacing:5px;margin-bottom:48px}
+.verify-desc{font-size:13px;color:var(--text-mid);line-height:1.9;margin-bottom:40px;max-width:260px}
+.btn-gold{background:var(--gold);color:var(--bg);border:none;border-radius:14px;padding:18px 0;width:100%;max-width:300px;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:14px;transition:opacity .2s,transform .15s;touch-action:manipulation}
+.btn-gold:active{opacity:.85;transform:scale(.97)}
+.btn-gold:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.powered{font-size:10px;color:#2a2a2a;letter-spacing:3px;margin-top:12px}
+.error-msg{font-size:11px;color:var(--red);text-align:center;margin-top:10px;letter-spacing:1px;min-height:16px}
+
+/* ── MAIN ── */
+#screen-main{flex:1;display:none;flex-direction:column}
+.top-bar{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #161616}
+.top-title{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);letter-spacing:8px}
+.badge-verified{font-size:10px;color:var(--green);background:rgba(76,175,80,.08);padding:5px 12px;border-radius:99px;border:1px solid rgba(76,175,80,.2);letter-spacing:1px}
+
+.tabs{display:flex;border-bottom:1px solid #161616}
+.tab{flex:1;padding:12px 4px;text-align:center;font-size:10px;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;letter-spacing:1px;touch-action:manipulation}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+.tab-content{display:none;flex:1;padding:20px 16px;flex-direction:column;align-items:center;overflow-y:auto}
+.tab-content.active{display:flex}
+
+/* ── TIMER ── */
+.timer-wrap{position:relative;width:180px;height:180px;margin:6px auto 22px}
+.timer-svg{position:absolute;top:0;left:0;width:100%;height:100%}
+.timer-progress{transition:stroke-dashoffset 1s linear}
+.timer-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.timer-num{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--gold);letter-spacing:3px;line-height:1}
+.timer-label{font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-top:4px}
+
+/* Boost activo en timer */
+.boost-badge{font-size:11px;font-weight:700;letter-spacing:1px;margin-top:6px;padding:3px 10px;border-radius:99px}
+.boost-badge.fire{color:#ff6b35;background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.3)}
+.boost-badge.hidden{display:none}
+
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin-bottom:16px}
+.stat-card{background:var(--surface);border-radius:12px;padding:13px;border:1px solid #1c1c1c}
+.stat-label{font-size:9px;color:var(--text-dim);margin-bottom:6px;letter-spacing:2px}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--gold);letter-spacing:1px;line-height:1}
+.stat-unit{font-size:9px;color:#444;margin-top:3px;letter-spacing:1px}
+.stat-val.boosted{color:#ff6b35}
+
+.status-pill{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid #1c1c1c;border-radius:99px;padding:9px 18px;margin-bottom:16px;font-size:11px;color:var(--text-mid);letter-spacing:1px}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(76,175,80,.4)}50%{opacity:.7;box-shadow:0 0 0 4px rgba(76,175,80,0)}}
+
+/* ── BALANCE ── */
+.balance-big{font-family:'Bebas Neue',sans-serif;font-size:68px;color:var(--gold);letter-spacing:4px;margin:16px 0 4px;line-height:1}
+.balance-sub{font-size:10px;color:#333;letter-spacing:5px;margin-bottom:24px}
+.divider{width:100%;height:1px;background:#161616;margin:4px 0 14px}
+.section-label{font-size:9px;color:#333;letter-spacing:4px;width:100%;margin-bottom:10px}
+.hist-row{display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px 0;border-bottom:1px solid #131313}
+.hist-day{font-size:13px;color:var(--text-mid)}
+.hist-val{font-size:13px;color:var(--gold);font-weight:700}
+.btn-withdraw{background:var(--gold);color:var(--bg);border:none;border-radius:14px;padding:15px 0;width:100%;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-top:20px;touch-action:manipulation}
+.btn-soon{background:transparent;color:#2a2a2a;border:1px solid #1c1c1c;border-radius:14px;padding:13px 0;width:100%;font-size:11px;font-family:'Space Mono',monospace;cursor:default;margin-top:8px;letter-spacing:1px}
+
+/* ── BOOST TAB ── */
+.boost-section-title{font-size:9px;color:var(--text-dim);letter-spacing:4px;width:100%;margin:16px 0 10px;padding-bottom:8px;border-bottom:1px solid #1a1a1a}
+.boost-section-title:first-child{margin-top:0}
+
+/* Tier permanente activo */
+.perm-tier-display{width:100%;background:var(--surface);border:1px solid #1c1c1c;border-radius:14px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.perm-tier-left .tier-name{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold);letter-spacing:2px}
+.perm-tier-left .tier-sub{font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-top:2px}
+.perm-tier-right{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--gold);letter-spacing:1px}
+
+/* Boost cards */
+.boost-card{width:100%;background:var(--surface);border:1px solid #1c1c1c;border-radius:14px;padding:14px 16px;margin-bottom:10px;position:relative;overflow:hidden}
+.boost-card.active-boost{border-color:rgba(255,107,53,.4);background:rgba(255,107,53,.04)}
+.boost-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.boost-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px}
+.boost-multi{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold)}
+.boost-card.active-boost .boost-multi{color:#ff6b35}
+.boost-desc{font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:12px;line-height:1.7}
+.boost-timer-bar{width:100%;height:3px;background:#1c1c1c;border-radius:99px;margin-bottom:10px;overflow:hidden}
+.boost-timer-fill{height:100%;background:linear-gradient(90deg,#ff6b35,#ffaa00);border-radius:99px;transition:width 1s linear}
+.boost-timer-text{font-size:10px;color:#ff6b35;letter-spacing:1px;margin-bottom:10px}
+
+/* Botones de compra */
+.buy-row{display:flex;gap:8px}
+.btn-buy{flex:1;border:none;border-radius:10px;padding:10px 0;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;touch-action:manipulation;transition:opacity .2s,transform .1s}
+.btn-buy:active{opacity:.8;transform:scale(.97)}
+.btn-buy.wld{background:rgba(74,158,255,.12);color:var(--blue);border:1px solid rgba(74,158,255,.25)}
+.btn-buy.usdc{background:rgba(76,175,80,.1);color:#26a69a;border:1px solid rgba(76,175,80,.2)}
+.btn-buy:disabled{opacity:.35;cursor:not-allowed;transform:none}
+
+/* owned tier */
+.tier-owned{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--green);letter-spacing:1px;margin-top:4px}
+.tier-owned::before{content:"✓";font-size:12px}
+
+/* ── INFO ── */
+.info-card{background:var(--surface);border-radius:14px;padding:16px;border:1px solid #1c1c1c;width:100%;margin-bottom:10px}
+.info-card-label{font-size:9px;color:var(--text-dim);letter-spacing:3px;margin-bottom:10px}
+.info-card-body{font-size:12px;color:#666;line-height:1.9}
+.info-card-body span{color:var(--gold);font-weight:700}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:#0e0e0e;border:1px solid #222;border-radius:24px 24px 0 0;padding:28px 24px 40px;width:100%;max-width:480px;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,1,.5,1)}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold);letter-spacing:4px;margin-bottom:4px}
+.modal-sub{font-size:11px;color:var(--text-dim);letter-spacing:2px;margin-bottom:24px}
+.modal-price-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #1a1a1a;font-size:12px;color:var(--text-mid)}
+.modal-price-row span:last-child{color:#fff;font-weight:700}
+.modal-btns{display:flex;gap:10px;margin-top:22px}
+.modal-btn{flex:1;border:none;border-radius:14px;padding:16px 0;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;touch-action:manipulation;transition:opacity .2s}
+.modal-btn:active{opacity:.8}
+.modal-btn.wld{background:var(--blue);color:#fff}
+.modal-btn.usdc{background:#26a69a;color:#fff}
+.modal-btn-cancel{width:100%;margin-top:10px;background:transparent;border:1px solid #222;border-radius:14px;padding:13px 0;font-family:'Space Mono',monospace;font-size:11px;color:var(--text-dim);cursor:pointer;letter-spacing:2px;touch-action:manipulation}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(10px);background:#161616;border:1px solid var(--gold-border);color:var(--gold);padding:12px 24px;border-radius:99px;font-size:12px;opacity:0;transition:opacity .3s,transform .3s;z-index:300;white-space:nowrap;letter-spacing:1px;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- ══ PANTALLA VERIFICACIÓN ══ -->
+<div id="screen-verify">
+  <div class="logo-ring">
+    <svg viewBox="0 0 110 110" fill="none">
+      <circle cx="55" cy="55" r="50" stroke="rgba(201,168,76,0.2)" stroke-width="1"/>
+      <circle cx="55" cy="55" r="50" stroke="url(#g)" stroke-width="1.5" stroke-dasharray="8 12" stroke-linecap="round"/>
+      <defs><linearGradient id="g" x1="0" y1="0" x2="110" y2="110" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#C9A84C"/><stop offset="100%" stop-color="rgba(201,168,76,0.1)"/></linearGradient></defs>
+    </svg>
+    <div class="logo-inner">T</div>
+  </div>
+  <div class="app-title">TIME</div>
+  <div class="app-sub">EARN WITH YOUR TIME</div>
+  <div class="verify-desc">Gana TIME tokens por cada minuto que pasas en la app.<br>Solo personas reales verificadas con World ID.</div>
+  <button class="btn-gold" id="btn-verify" onclick="verificar()">VERIFICAR CON WORLD ID</button>
+  <div class="error-msg" id="error-msg"></div>
+  <div class="powered">POWERED BY WORLD ID</div>
+</div>
+
+<!-- ══ PANTALLA PRINCIPAL ══ -->
+<div id="screen-main">
+  <div class="top-bar">
+    <div class="top-title">TIME</div>
+    <div id="badge-status" class="badge-verified">✓ VERIFICADO</div>
+  </div>
+  <div class="tabs">
+    <div class="tab active"  onclick="switchTab('earn')">GANAR</div>
+    <div class="tab"         onclick="switchTab('boost')">BOOST</div>
+    <div class="tab"         onclick="switchTab('balance')">BALANCE</div>
+    <div class="tab"         onclick="switchTab('info')">INFO</div>
+  </div>
+
+  <!-- TAB GANAR -->
+  <div id="tab-earn" class="tab-content active">
+    <div class="status-pill"><div class="pulse"></div><span id="status-text">ACUMULANDO TIME...</span></div>
+    <div class="timer-wrap">
+      <svg class="timer-svg" viewBox="0 0 180 180">
+        <circle cx="90" cy="90" r="80" fill="none" stroke="#1a1a1a" stroke-width="6"/>
+        <circle cx="90" cy="90" r="80" fill="none" stroke="#C9A84C" stroke-width="6"
+          stroke-linecap="round" stroke-dasharray="502" stroke-dashoffset="502"
+          transform="rotate(-90 90 90)" id="timer-arc" class="timer-progress"/>
+        <circle cx="90" cy="90" r="68" fill="none" stroke="rgba(201,168,76,0.05)" stroke-width="1"/>
+      </svg>
+      <div class="timer-center">
+        <div class="timer-num" id="timer-display">00:00</div>
+        <div class="timer-label">TIEMPO ACTIVO</div>
+        <div class="boost-badge fire hidden" id="active-boost-badge">⚡ 2x</div>
+      </div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">GANADO HOY</div><div class="stat-val" id="earned-today">0.0000</div><div class="stat-unit">TIME</div></div>
+      <div class="stat-card"><div class="stat-label">TOTAL</div><div class="stat-val" id="earned-total">0.0000</div><div class="stat-unit">TIME</div></div>
+      <div class="stat-card"><div class="stat-label">TASA ACTUAL</div><div class="stat-val" id="rate-display">0.1</div><div class="stat-unit">TIME / HORA</div></div>
+      <div class="stat-card"><div class="stat-label">RACHA</div><div class="stat-val" id="streak-val">1</div><div class="stat-unit">DÍAS</div></div>
+    </div>
+  </div>
+
+  <!-- TAB BOOST -->
+  <div id="tab-boost" class="tab-content">
+
+    <!-- Tier permanente activo -->
+    <div class="perm-tier-display">
+      <div class="perm-tier-left">
+        <div class="tier-name" id="perm-tier-name">SIN TIER</div>
+        <div class="tier-sub">MULTIPLICADOR PERMANENTE</div>
+      </div>
+      <div class="perm-tier-right" id="perm-tier-multi">1x</div>
+    </div>
+
+    <!-- Boosts temporales -->
+    <div class="boost-section-title">⚡ BOOSTS TEMPORALES</div>
+
+    <!-- SPARK -->
+    <div class="boost-card" id="card-spark">
+      <div class="boost-card-top">
+        <div>
+          <div class="boost-name" style="color:#ffaa00">⚡ SPARK</div>
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:2px">2X · 1 HORA</div>
+        </div>
+        <div class="boost-multi" id="spark-multi">2x</div>
+      </div>
+      <div class="boost-desc">Duplica tu tasa de ganancia durante 1 hora completa. Ideal para sesiones cortas.</div>
+      <div class="boost-timer-bar" id="spark-bar-wrap" style="display:none"><div class="boost-timer-fill" id="spark-bar" style="width:100%"></div></div>
+      <div class="boost-timer-text" id="spark-timer" style="display:none">⏱ --:--</div>
+      <div class="buy-row">
+        <button class="btn-buy wld" id="btn-spark-wld"  onclick="abrirModal('spark','wld')">0.05 WLD</button>
+        <button class="btn-buy usdc" id="btn-spark-usdc" onclick="abrirModal('spark','usdc')">$0.10 USDC</button>
+      </div>
+    </div>
+
+    <!-- BLAZE -->
+    <div class="boost-card" id="card-blaze">
+      <div class="boost-card-top">
+        <div>
+          <div class="boost-name" style="color:#ff6b35">🔥 BLAZE</div>
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:2px">5X · 3 HORAS</div>
+        </div>
+        <div class="boost-multi" id="blaze-multi">5x</div>
+      </div>
+      <div class="boost-desc">Multiplica por 5 tu ganancia durante 3 horas. La mejor relación precio/tiempo.</div>
+      <div class="boost-timer-bar" id="blaze-bar-wrap" style="display:none"><div class="boost-timer-fill" id="blaze-bar" style="width:100%"></div></div>
+      <div class="boost-timer-text" id="blaze-timer" style="display:none">⏱ --:--</div>
+      <div class="buy-row">
+        <button class="btn-buy wld" id="btn-blaze-wld"  onclick="abrirModal('blaze','wld')">0.10 WLD</button>
+        <button class="btn-buy usdc" id="btn-blaze-usdc" onclick="abrirModal('blaze','usdc')">$0.25 USDC</button>
+      </div>
+    </div>
+
+    <!-- INFERNO -->
+    <div class="boost-card" id="card-inferno">
+      <div class="boost-card-top">
+        <div>
+          <div class="boost-name" style="color:#e74c3c">🌋 INFERNO</div>
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:2px">10X · 6 HORAS</div>
+        </div>
+        <div class="boost-multi" id="inferno-multi">10x</div>
+      </div>
+      <div class="boost-desc">El máximo boost temporal. 10x durante 6 horas para maratones de ganancias.</div>
+      <div class="boost-timer-bar" id="inferno-bar-wrap" style="display:none"><div class="boost-timer-fill" id="inferno-bar" style="width:100%"></div></div>
+      <div class="boost-timer-text" id="inferno-timer" style="display:none">⏱ --:--</div>
+      <div class="buy-row">
+        <button class="btn-buy wld" id="btn-inferno-wld"  onclick="abrirModal('inferno','wld')">0.18 WLD</button>
+        <button class="btn-buy usdc" id="btn-inferno-usdc" onclick="abrirModal('inferno','usdc')">$0.50 USDC</button>
+      </div>
+    </div>
+
+    <!-- Tiers permanentes -->
+    <div class="boost-section-title" style="margin-top:8px">💎 TIERS PERMANENTES</div>
+
+    <!-- TIER I -->
+    <div class="boost-card" id="card-tier1">
+      <div class="boost-card-top">
+        <div>
+          <div class="boost-name" style="color:#888">◈ TIER I</div>
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:2px">1.5X PERMANENTE</div>
+        </div>
+        <div class="boost-multi">1.5x</div>
+      </div>
+      <div class="boost-desc">Aumenta permanentemente tu tasa base a 0.15 TIME/hora para siempre.</div>
+      <div id="tier1-owned" class="tier-owned" style="display:none">YA TIENES ESTE TIER</div>
+      <div class="buy-row" id="tier1-buy">
+        <button class="btn-buy wld"  onclick="abrirModal('tier1','wld')">0.50 WLD</button>
+        <button class="btn-buy usdc" onclick="abrirModal('tier1','usdc')">$1.50 USDC</button>
+      </div>
+    </div>
+
+    <!-- TIER II -->
+    <div class="boost-card" id="card-tier2">
+      <div class="boost-card-top">
+        <div>
+          <div class="boost-name" style="color:var(--blue)">◈ TIER II</div>
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:2px">2X PERMANENTE</div>
+        </div>
+        <div class="boost-multi">2x</div>
+      </div>
+      <div class="boost-desc">Duplica tu tasa base para siempre: 0.2 TIME/hora garantizados.</div>
+      <div id="tier2-owned" class="tier-owned" style="display:none">YA TIENES ESTE TIER</div>
+      <div class="buy-row" id="tier2-buy">
+        <button class="btn-buy wld"  onclick="abrirModal('tier2','wld')">1.20 WLD</button>
+        <button class="btn-buy usdc" onclick="abrirModal('tier2','usdc')">$3.50 USDC</button>
+      </div>
+    </div>
+
+    <!-- TIER III -->
+    <div class="boost-card" id="card-tier3">
+      <div class="boost-card-top">
+        <div>
+          <div class="boost-name" style="color:var(--gold)">◈ TIER III</div>
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:2px">3X PERMANENTE</div>
+        </div>
+        <div class="boost-multi">3x</div>
+      </div>
+      <div class="boost-desc">Triple tasa base permanente. 0.3 TIME/hora de base, siempre.</div>
+      <div id="tier3-owned" class="tier-owned" style="display:none">YA TIENES ESTE TIER</div>
+      <div class="buy-row" id="tier3-buy">
+        <button class="btn-buy wld"  onclick="abrirModal('tier3','wld')">2.50 WLD</button>
+        <button class="btn-buy usdc" onclick="abrirModal('tier3','usdc')">$7.00 USDC</button>
+      </div>
+    </div>
+
+    <!-- TIER IV -->
+    <div class="boost-card" id="card-tier4">
+      <div class="boost-card-top">
+        <div>
+          <div class="boost-name" style="color:#e74c3c">◈ TIER IV</div>
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:2px">5X PERMANENTE</div>
+        </div>
+        <div class="boost-multi" style="color:#e74c3c">5x</div>
+      </div>
+      <div class="boost-desc">El máximo tier. 0.5 TIME/hora permanente. Con INFERNO activo: hasta 50x la tasa base.</div>
+      <div id="tier4-owned" class="tier-owned" style="display:none">YA TIENES ESTE TIER</div>
+      <div class="buy-row" id="tier4-buy">
+        <button class="btn-buy wld"  onclick="abrirModal('tier4','wld')">5.00 WLD</button>
+        <button class="btn-buy usdc" onclick="abrirModal('tier4','usdc')">$14.00 USDC</button>
+      </div>
+    </div>
+
+  </div><!-- /tab-boost -->
+
+  <!-- TAB BALANCE -->
+  <div id="tab-balance" class="tab-content">
+    <div class="balance-big" id="balance-display">0.0000</div>
+    <div class="balance-sub">TIME TOKENS</div>
+    <div class="divider"></div>
+    <div class="section-label">HISTORIAL</div>
+    <div class="hist-row"><span class="hist-day">Hoy</span><span class="hist-val" id="hist-today">+0.0000 TIME</span></div>
+    <div class="hist-row"><span class="hist-day">Ayer</span><span class="hist-val" id="hist-yesterday">+0.0000 TIME</span></div>
+    <div class="hist-row"><span class="hist-day">Hace 2 días</span><span class="hist-val" id="hist-2days">+0.0000 TIME</span></div>
+    <button class="btn-withdraw" onclick="retirar()">RETIRAR TIME</button>
+    <button class="btn-soon">Próximamente: swap a WLD</button>
+  </div>
+
+  <!-- TAB INFO -->
+  <div id="tab-info" class="tab-content" style="align-items:flex-start">
+    <div class="info-card"><div class="info-card-label">¿CÓMO FUNCIONA?</div><div class="info-card-body">Cada minuto en TIME ganas <span>0.00167 TIME</span> (0.1/hora). Los boosts multiplican esa tasa.</div></div>
+    <div class="info-card"><div class="info-card-label">SISTEMA DE BOOSTS</div><div class="info-card-body"><span>Temporales:</span> multiplican por horas. <span>Tiers permanentes:</span> suben tu base para siempre. Se acumulan: TIER IV + INFERNO = <span>50x</span>.</div></div>
+    <div class="info-card"><div class="info-card-label">¿QUÉ ES TIME TOKEN?</div><div class="info-card-body">Solo personas verificadas con <span>World ID</span> pueden ganarlo — sin bots, sin trampas.</div></div>
+    <div class="info-card"><div class="info-card-label">PRÓXIMAMENTE</div><div class="info-card-body" style="color:#333">• Retiro a wallet WLD<br>• Referidos verificados<br>• Swap TIME → WLD<br>• Torneos de racha</div></div>
+  </div>
+</div><!-- /screen-main -->
+
+<!-- ══ MODAL DE COMPRA ══ -->
+<div class="modal-overlay" id="modal-overlay" onclick="cerrarModalOverlay(event)">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">SPARK</div>
+    <div class="modal-sub"   id="modal-sub">2X · 1 HORA</div>
+    <div class="modal-price-row"><span>Precio WLD</span><span id="modal-price-wld">0.05 WLD</span></div>
+    <div class="modal-price-row"><span>Precio USDC</span><span id="modal-price-usdc">$0.10 USDC</span></div>
+    <div class="modal-price-row" id="modal-wallet-row" style="display:none"><span>Tu wallet</span><span id="modal-wallet-addr" style="font-size:10px;color:var(--text-dim)">—</span></div>
+    <div class="modal-btns">
+      <button class="modal-btn wld"  id="modal-btn-wld"  onclick="comprar('wld')">PAGAR WLD</button>
+      <button class="modal-btn usdc" id="modal-btn-usdc" onclick="comprar('usdc')">PAGAR USDC</button>
+    </div>
+    <button class="modal-btn-cancel" onclick="cerrarModal()">CANCELAR</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+/* ══════════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════════ */
+const APP_ID       = "app_d8fe914322b26e067cd72b0a5780319a";
+const ACTION_ID    = "verificacion-time";
+const BASE_RATE    = 0.1 / 3600; // TIME por segundo sin boosts
+const SYNC_CADA    = 10;
+
+// Wallet receptora de pagos (reemplaza con la tuya)
+const PAYMENT_WALLET = "0xbfab37c6703e853944696dc9400be77f3878df7b";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyC7GfllFG3MBWb_190pi_nhakAJk4kmn5Y",
+  authDomain:"time-2e941.firebaseapp.com",
+  projectId:"time-2e941",
+  storageBucket:"time-2e941.firebasestorage.app",
+  messagingSenderId:"459114330177",
+  appId:"1:459114330177:web:74771a874c21060e8d2ec0"
+};
+
+/* ══════════════════════════════════════════════
+   CATÁLOGO DE BOOSTS
+══════════════════════════════════════════════ */
+const BOOSTS = {
+  // Temporales
+  spark:   { name:"SPARK",   sub:"2X · 1 HORA",       multi:2,  durMs:1*3600*1000, wld:"0.05", usdc:"0.10", tipo:"temp" },
+  blaze:   { name:"BLAZE",   sub:"5X · 3 HORAS",      multi:5,  durMs:3*3600*1000, wld:"0.10", usdc:"0.25", tipo:"temp" },
+  inferno: { name:"INFERNO", sub:"10X · 6 HORAS",     multi:10, durMs:6*3600*1000, wld:"0.18", usdc:"0.50", tipo:"temp" },
+  // Permanentes
+  tier1:   { name:"TIER I",  sub:"1.5X PERMANENTE",   multi:1.5, wld:"0.50",  usdc:"1.50",  tipo:"perm" },
+  tier2:   { name:"TIER II", sub:"2X PERMANENTE",     multi:2,   wld:"1.20",  usdc:"3.50",  tipo:"perm" },
+  tier3:   { name:"TIER III", sub:"3X PERMANENTE",   multi:3,   wld:"2.50",  usdc:"7.00",  tipo:"perm" },
+  tier4:   { name:"TIER IV", sub:"5X PERMANENTE",     multi:5,   wld:"5.00",  usdc:"14.00", tipo:"perm" },
+};
+
+// Orden de tiers (mayor tier gana)
+const TIER_ORDER = ["tier4","tier3","tier2","tier1"];
+
+/* ══════════════════════════════════════════════
+   ESTADO
+══════════════════════════════════════════════ */
+const fbApp = initializeApp(firebaseConfig);
+const db    = getFirestore(fbApp);
+
+let segundos    = 0;
+let earnedToday = 0;
+let earnedTotal = 0;
+let streak      = 1;
+let userHash    = null;
+let timerInterval = null;
+let segsSinSync   = 0;
+let inicioReal    = null;
+let guardando     = false;
+
+// Estado de boosts
+let boostState = {
+  // Temporales: { expireAt: timestamp ms } o null
+  spark:   null,
+  blaze:   null,
+  inferno: null,
+  // Permanentes: true/false
+  tier1: false, tier2: false, tier3: false, tier4: false,
+};
+
+// Modal
+let modalBoostId  = null;
+let modalMoneda   = null;
+
+/* ══════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════ */
+const pad   = n => String(n).padStart(2,"0");
+const setEl = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+const lsKey = h => "time_bk_" + h;
+const lsBoostKey = h => "time_boost_" + h;
+
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+window.mostrarToast = toast;
+
+function getDeviceId() {
+  let id = localStorage.getItem("time_device_id");
+  if (!id) {
+    id = "dev_" + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+    localStorage.setItem("time_device_id", id);
+  }
+  return id;
+}
+
+/* ══════════════════════════════════════════════
+   CÁLCULO DE MULTIPLICADOR ACTUAL
+══════════════════════════════════════════════ */
+function getMultiplicador() {
+  const now = Date.now();
+  // Permanente: el mayor tier que tenga
+  let permMulti = 1;
+  for (const tid of TIER_ORDER) {
+    if (boostState[tid]) { permMulti = BOOSTS[tid].multi; break; }
+  }
+  // Temporal: el mayor activo
+  let tempMulti = 1;
+  for (const tid of ["inferno","blaze","spark"]) {
+    if (boostState[tid] && boostState[tid].expireAt > now) {
+      tempMulti = BOOSTS[tid].multi; break;
+    }
+  }
+  return permMulti * tempMulti;
+}
+
+function getActiveTemp() {
+  const now = Date.now();
+  for (const tid of ["inferno","blaze","spark"]) {
+    if (boostState[tid] && boostState[tid].expireAt > now) return tid;
+  }
+  return null;
+}
+
+function getActivePerm() {
+  for (const tid of TIER_ORDER) {
+    if (boostState[tid]) return tid;
+  }
+  return null;
+}
+
+/* ══════════════════════════════════════════════
+   LOCAL STORAGE — DATOS + BOOSTS
+══════════════════════════════════════════════ */
+function guardarLocal() {
+  if (!userHash) return;
+  try {
+    localStorage.setItem(lsKey(userHash), JSON.stringify({
+      total: earnedTotal, today: earnedToday, streak,
+      lastDate: new Date().toDateString()
+    }));
+    localStorage.setItem(lsBoostKey(userHash), JSON.stringify(boostState));
+  } catch(_) {}
+}
+
+function cargarLocal(hash) {
+  try {
+    const raw = localStorage.getItem(lsKey(hash));
+    if (raw) {
+      const d = JSON.parse(raw);
+      const hoy = new Date().toDateString();
+      const ayer = new Date(); ayer.setDate(ayer.getDate()-1);
+      earnedTotal = d.total || 0;
+      if (d.lastDate === hoy) {
+        earnedToday = d.today  || 0;
+        streak      = d.streak || 1;
+      } else {
+        earnedToday = 0;
+        streak = d.lastDate === ayer.toDateString() ? (d.streak||1)+1 : 1;
+      }
+    }
+    // Cargar boosts
+    const rawB = localStorage.getItem(lsBoostKey(hash));
+    if (rawB) {
+      const b = JSON.parse(rawB);
+      // Limpiar temporales expirados al cargar
+      const now = Date.now();
+      for (const tid of ["spark","blaze","inferno"]) {
+        if (b[tid] && b[tid].expireAt > now) boostState[tid] = b[tid];
+        else boostState[tid] = null;
+      }
+      for (const tid of ["tier1","tier2","tier3","tier4"]) {
+        boostState[tid] = !!b[tid];
+      }
+    }
+  } catch(_) {}
+}
+
+/* ══════════════════════════════════════════════
+   FIREBASE SYNC
+══════════════════════════════════════════════ */
+async function syncFirebaseBg(hash) {
+  const hoy  = new Date().toDateString();
+  const ayer = new Date(); ayer.setDate(ayer.getDate()-1);
+  try {
+    const ref  = doc(db,"usuarios",hash);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      const d = snap.data();
+      if ((d.total||0) > earnedTotal) {
+        earnedTotal = d.total;
+        if (d.lastDate === hoy) {
+          earnedToday = Math.max(earnedToday, d.today||0);
+          streak = d.streak || streak;
+        } else {
+          streak = d.lastDate === ayer.toDateString() ? (d.streak||1)+1 : streak;
+        }
+      }
+      // Restaurar boosts desde Firebase si hay
+      if (d.boosts) {
+        const b = d.boosts, now = Date.now();
+        for (const tid of ["spark","blaze","inferno"]) {
+          if (b[tid] && b[tid].expireAt > now) boostState[tid] = b[tid];
+        }
+        for (const tid of ["tier1","tier2","tier3","tier4"]) {
+          if (b[tid]) boostState[tid] = true;
+        }
+        guardarLocal();
+      }
+      actualizarUI();
+    } else {
+      await setDoc(ref, {
+        total:earnedTotal, today:earnedToday, streak,
+        lastDate:hoy, boosts:boostState, creadoEn:serverTimestamp()
+      });
+    }
+  } catch(e) { console.warn("[TIME] Firebase bg:", e); }
+}
+
+async function sync() {
+  guardarLocal();
+  if (!userHash || guardando) return;
+  guardando = true;
+  try {
+    const snap = { total:earnedTotal, today:earnedToday, streak,
+      lastDate:new Date().toDateString(), boosts:boostState, ultimaSync:serverTimestamp() };
+    await setDoc(doc(db,"usuarios",userHash), snap, { merge:true });
+  } catch(e) { console.warn("[TIME] sync:", e); }
+  finally { guardando = false; }
+}
+
+/* ══════════════════════════════════════════════
+   MINIKIT — instalado en script superior
+══════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════
+   VERIFICAR
+══════════════════════════════════════════════ */
+window.verificar = async function() {
+  const btn = document.getElementById("btn-verify");
+  const err = document.getElementById("error-msg");
+  btn.textContent = "VERIFICANDO..."; btn.disabled = true; err.textContent = "";
+  await new Promise(r => setTimeout(r, 80));
+  const mkOk = typeof MiniKit!=="undefined" && MiniKit.isInstalled?.();
+
+  if (!mkOk) {
+    const wallet = typeof MiniKit!=="undefined" ? MiniKit?.user?.walletAddress : null;
+    userHash = wallet || getDeviceId();
+    cargarLocal(userHash); entrarApp(!!wallet); syncFirebaseBg(userHash);
+    return;
+  }
+  try {
+    if (typeof MiniKit.commandsAsync?.verify !== "function") {
+      userHash = MiniKit?.user?.walletAddress || getDeviceId();
+      cargarLocal(userHash); entrarApp(true); syncFirebaseBg(userHash);
+      return;
+    }
+    const resp = await Promise.race([
+      MiniKit.commandsAsync.verify({ action:ACTION_ID, signal:"", verification_level:"orb" }),
+      new Promise((_,rej) => setTimeout(()=>rej(new Error("timeout")),20000))
+    ]);
+    const p = resp?.finalPayload ?? resp;
+    if (p?.status==="success") {
+      userHash = p.nullifier_hash;
+    } else if (p?.error_code==="already_verified") {
+      userHash = p.nullifier_hash || MiniKit?.user?.walletAddress || getDeviceId();
+    } else {
+      userHash = MiniKit?.user?.walletAddress || null;
+    }
+  } catch(e) {
+    userHash = MiniKit?.user?.walletAddress || null;
+  }
+  if (!userHash) {
+    userHash = getDeviceId();
+    document.getElementById("badge-status").style.display = "none";
+  }
+  cargarLocal(userHash); entrarApp(true); syncFirebaseBg(userHash);
+};
+
+/* ══════════════════════════════════════════════
+   ENTRAR
+══════════════════════════════════════════════ */
+function entrarApp(verificado) {
+  document.getElementById("screen-verify").style.display = "none";
+  document.getElementById("screen-main").style.display   = "flex";
+  if (!verificado) document.getElementById("badge-status").style.display = "none";
+  actualizarUI();
+  iniciarTimer();
+  sync();
+  window.addEventListener("beforeunload", () => guardarLocal());
+  document.addEventListener("visibilitychange", () => { if (document.hidden) sync(); });
+  try { MiniKit?.subscribe?.("miniapp-close", () => sync()); } catch(_) {}
+}
+
+/* ══════════════════════════════════════════════
+   TIMER
+══════════════════════════════════════════════ */
+function iniciarTimer() {
+  if (timerInterval) return;
+  inicioReal = Date.now();
+  timerInterval = setInterval(() => {
+    segundos = Math.floor((Date.now()-inicioReal)/1000);
+    const multi = getMultiplicador();
+    earnedToday += BASE_RATE * multi;
+    earnedTotal += BASE_RATE * multi;
+    segsSinSync++;
+    actualizarUI();
+    if (segsSinSync >= SYNC_CADA) { segsSinSync = 0; sync(); }
+  }, 1000);
+}
+
+/* ══════════════════════════════════════════════
+   UI — ACTUALIZAR TODO
+══════════════════════════════════════════════ */
+function actualizarUI() {
+  const m = Math.floor(segundos/60), s = segundos%60;
+  setEl("timer-display", pad(m)+":"+pad(s));
+  const arc = document.getElementById("timer-arc");
+  if (arc) arc.style.strokeDashoffset = 502*(1-(segundos%60)/60);
+
+  const multi = getMultiplicador();
+  const rateActual = (0.1 * multi).toFixed(multi>=10 ? 0 : 1);
+
+  setEl("earned-today",    earnedToday.toFixed(4));
+  setEl("earned-total",    earnedTotal.toFixed(4));
+  setEl("balance-display", earnedTotal.toFixed(4));
+  setEl("hist-today",      "+"+earnedToday.toFixed(4)+" TIME");
+  // hist-yesterday comes from Firebase/localStorage on load; keep static display
+  const ayer2 = new Date(); ayer2.setDate(ayer2.getDate()-1);
+  const rawY = localStorage.getItem("time_bk_" + (userHash||""));
+  if (!rawY) setEl("hist-yesterday", "+0.0000 TIME");
+  setEl("streak-val",      streak);
+  setEl("rate-display",    rateActual);
+
+  // Color tasa si boost activo
+  const rateEl = document.getElementById("rate-display");
+  if (rateEl) rateEl.className = "stat-val" + (multi>1 ? " boosted" : "");
+
+  // Badge boost en timer
+  const badge = document.getElementById("active-boost-badge");
+  const activeTemp = getActiveTemp();
+  if (activeTemp && badge) {
+    badge.textContent = "⚡ " + multi + "x";
+    badge.classList.remove("hidden");
+  } else if (badge) {
+    badge.classList.add("hidden");
+  }
+
+  // Status pill
+  const activePerm = getActivePerm();
+  if (activeTemp) {
+    setEl("status-text", "⚡ BOOST ACTIVO "+multi+"x");
+  } else if (activePerm) {
+    setEl("status-text", "◈ "+BOOSTS[activePerm].name+" ACTIVO");
+  } else {
+    setEl("status-text", "ACUMULANDO TIME...");
+  }
+
+  // Actualizar cards de boosts
+  actualizarBoostCards();
+}
+
+function actualizarBoostCards() {
+  const now = Date.now();
+
+  // Temporales: timers
+  for (const tid of ["spark","blaze","inferno"]) {
+    const b = boostState[tid];
+    const barWrap = document.getElementById(tid+"-bar-wrap");
+    const timerEl = document.getElementById(tid+"-timer");
+    const btnW = document.getElementById("btn-"+tid+"-wld");
+    const btnU = document.getElementById("btn-"+tid+"-usdc");
+    const card = document.getElementById("card-"+tid);
+
+    if (b && b.expireAt > now) {
+      const left = b.expireAt - now;
+      const total = BOOSTS[tid].durMs;
+      const pct = (left/total)*100;
+      const hh = Math.floor(left/3600000);
+      const mm = Math.floor((left%3600000)/60000);
+      const ss = Math.floor((left%60000)/1000);
+      if (barWrap) barWrap.style.display = "block";
+      if (timerEl) { timerEl.style.display="block"; timerEl.textContent = `⏱ ${pad(hh)}:${pad(mm)}:${pad(ss)} restantes`; }
+      const fill = document.getElementById(tid+"-bar");
+      if (fill) fill.style.width = pct+"%";
+      if (btnW) btnW.disabled = true;
+      if (btnU) btnU.disabled = true;
+      if (card) card.classList.add("active-boost");
+    } else {
+      if (barWrap) barWrap.style.display="none";
+      if (timerEl) timerEl.style.display="none";
+      if (btnW) btnW.disabled = false;
+      if (btnU) btnU.disabled = false;
+      if (card) card.classList.remove("active-boost");
+      if (b) boostState[tid] = null; // expiró
+    }
+  }
+
+  // Permanentes: mostrar owned
+  const perm = getActivePerm();
+  for (const tid of ["tier1","tier2","tier3","tier4"]) {
+    const owned = document.getElementById(tid+"-owned");
+    const buyRow = document.getElementById(tid+"-buy");
+    const isOwned = boostState[tid];
+    if (owned) owned.style.display = isOwned ? "flex" : "none";
+    if (buyRow) buyRow.style.display = isOwned ? "none" : "flex";
+  }
+
+  // Tier display arriba
+  if (perm) {
+    setEl("perm-tier-name",  BOOSTS[perm].name);
+    setEl("perm-tier-multi", BOOSTS[perm].multi+"x");
+  } else {
+    setEl("perm-tier-name",  "SIN TIER");
+    setEl("perm-tier-multi", "1x");
+  }
+}
+
+/* ══════════════════════════════════════════════
+   MODAL DE COMPRA
+══════════════════════════════════════════════ */
+window.abrirModal = function(boostId, moneda) {
+  const b = BOOSTS[boostId];
+  modalBoostId = boostId;
+  modalMoneda  = moneda;
+
+  setEl("modal-title",    b.name);
+  setEl("modal-sub",      b.sub);
+  setEl("modal-price-wld",  b.wld + " WLD");
+  setEl("modal-price-usdc", "$" + b.usdc + " USDC");
+
+  // Mostrar wallet si disponible
+  const wallet = typeof MiniKit!=="undefined" ? MiniKit?.user?.walletAddress : null;
+  const wRow = document.getElementById("modal-wallet-row");
+  if (wallet && wRow) {
+    wRow.style.display = "flex";
+    setEl("modal-wallet-addr", wallet.slice(0,6)+"..."+wallet.slice(-4));
+  }
+
+  // Highlight botón seleccionado
+  document.getElementById("modal-btn-wld").style.opacity  = moneda==="wld"  ? "1" : "0.5";
+  document.getElementById("modal-btn-usdc").style.opacity = moneda==="usdc" ? "1" : "0.5";
+
+  document.getElementById("modal-overlay").classList.add("open");
+};
+
+window.cerrarModal = function() {
+  document.getElementById("modal-overlay").classList.remove("open");
+};
+
+window.cerrarModalOverlay = function(e) {
+  if (e.target === document.getElementById("modal-overlay")) cerrarModal();
+};
+
+/* ══════════════════════════════════════════════
+   COMPRAR BOOST — MiniKit Pay
+══════════════════════════════════════════════ */
+window.comprar = async function(moneda) {
+  const b    = BOOSTS[modalBoostId];
+  const btnW = document.getElementById("modal-btn-wld");
+  const btnU = document.getElementById("modal-btn-usdc");
+  const resetBtns = () => {
+    btnW.disabled = btnU.disabled = false;
+    btnW.textContent = "PAGAR WLD";
+    btnU.textContent = "PAGAR USDC";
+  };
+
+  btnW.disabled = btnU.disabled = true;
+  btnW.textContent = btnU.textContent = "PROCESANDO...";
+
+  _dbg("comprar moneda=" + moneda + " boost=" + modalBoostId);
+  _dbg("MiniKit=" + typeof MiniKit);
+
+  if (typeof MiniKit === "undefined") {
+    _dbg("ERROR: MiniKit no existe");
+    toast("Abre la app en World App");
+    resetBtns(); return;
+  }
+
+  _dbg("isInstalled=" + MiniKit.isInstalled?.());
+  _dbg("commandsAsync.pay=" + typeof MiniKit.commandsAsync?.pay);
+
+  const isWld  = moneda === "wld";
+  const symbol = isWld ? "WLD" : "USDCE";
+  const raw    = parseFloat(isWld ? b.wld : b.usdc);
+  // WLD=18 decimales, USDC=6 decimales
+  const dec    = isWld ? 18 : 6;
+  const tokenAmt = BigInt(Math.round(raw * Math.pow(10, dec))).toString();
+  const refId  = "time_" + modalBoostId + "_" + (userHash||"anon").slice(-6) + "_" + Date.now();
+
+  const payload = {
+    reference:   refId,
+    to:          PAYMENT_WALLET,
+    tokens: [{ symbol, token_amount: tokenAmt }],
+    description: "TIME App — Boost: " + b.name,
+  };
+
+  _dbg("payload=" + JSON.stringify(payload));
+
+  try {
+    let finalPayload;
+
+    if (typeof MiniKit.commandsAsync?.pay === "function") {
+      _dbg("usando commandsAsync.pay");
+      const r = await MiniKit.commandsAsync.pay(payload);
+      _dbg("resp=" + JSON.stringify(r));
+      finalPayload = r?.finalPayload ?? r;
+
+    } else if (typeof MiniKit.pay === "function") {
+      _dbg("usando MiniKit.pay");
+      const r = await MiniKit.pay(payload);
+      _dbg("resp=" + JSON.stringify(r));
+      finalPayload = r?.data ?? r?.finalPayload ?? r;
+
+    } else {
+      _dbg("ERROR: ninguna fn pay. Keys=" + Object.keys(MiniKit).join(","));
+      toast("Error: World App no soporta pagos aquí");
+      resetBtns(); return;
+    }
+
+    _dbg("finalPayload=" + JSON.stringify(finalPayload));
+
+    const exito = finalPayload?.status === "success"
+      || finalPayload?.transactionId
+      || finalPayload?.transaction_id
+      || finalPayload?.transaction_hash;
+
+    if (exito) {
+      const txHash = finalPayload?.transaction_hash || finalPayload?.transactionId || finalPayload?.transaction_id || "";
+      registrarPago({ ref:refId, boost:modalBoostId, moneda, amount:raw.toString(), token:symbol, txHash, usuario:userHash, ts:Date.now() });
+      activarBoost(modalBoostId);
+      cerrarModal();
+      toast("✓ " + b.name + " ACTIVADO");
+      sync();
+
+    } else if (finalPayload?.status === "error" || finalPayload?.error_code) {
+      _dbg("Pago error: " + (finalPayload?.error_code || finalPayload?.status));
+      toast("Pago fallido: " + (finalPayload?.error_code || "error"));
+      resetBtns();
+
+    } else {
+      _dbg("Cancelado. status=" + finalPayload?.status);
+      toast("Pago cancelado");
+      resetBtns();
+    }
+
+  } catch(e) {
+    _dbg("EXCEPCION: " + e.message);
+    toast("Error: " + e.message);
+    resetBtns();
+  }
+};
+
+/* ══════════════════════════════════════════════
+   REGISTRAR PAGO EN FIREBASE (auditoría)
+══════════════════════════════════════════════ */
+async function registrarPago(datos) {
+  try {
+    const pagoRef = doc(db, "pagos", datos.ref);
+    await setDoc(pagoRef, { ...datos, creadoEn: serverTimestamp() });
+  } catch(e) { console.warn("[TIME] registrarPago:", e); }
+}
+
+/* ══════════════════════════════════════════════
+   ACTIVAR BOOST (post-pago)
+══════════════════════════════════════════════ */
+function activarBoost(boostId) {
+  const b = BOOSTS[boostId];
+  if (b.tipo === "temp") {
+    const now = Date.now();
+    // Si ya tiene uno activo, extiende el tiempo
+    const ya = boostState[boostId];
+    const base = (ya && ya.expireAt > now) ? ya.expireAt : now;
+    boostState[boostId] = { expireAt: base + b.durMs };
+  } else {
+    // Permanente: solo activa el más alto que no tenga
+    boostState[boostId] = true;
+  }
+  guardarLocal();
+  actualizarUI();
+}
+
+/* ══════════════════════════════════════════════
+   TABS
+══════════════════════════════════════════════ */
+window.switchTab = function(tab) {
+  const TABS = ["earn","boost","balance","info"];
+  document.querySelectorAll(".tab").forEach((t,i) =>
+    t.classList.toggle("active", TABS[i]===tab));
+  document.querySelectorAll(".tab-content").forEach(c =>
+    c.classList.remove("active"));
+  document.getElementById("tab-"+tab)?.classList.add("active");
+  if (tab==="boost") actualizarBoostCards();
+};
+
+window.retirar = () => toast("Retiro disponible próximamente");
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "time-app",
+  "version": "1.0.0",
+  "description": "TIME App — Earn with your time. Powered by World ID.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@worldcoin/minikit-js": "^1.6.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
