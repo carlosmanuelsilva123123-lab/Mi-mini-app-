@@ -15,7 +15,7 @@ window._dbg = function(msg) {
 };
 
 // Instalar MiniKit una sola vez al cargar
-window.__mkReady = false;
+window.__mkReady = true;
 
 try {
   MiniKit.install("app_d8fe914322b26e067cd72b0a5780319a");
@@ -25,6 +25,6 @@ try {
   _dbg("isInstalled: " + MiniKit.isInstalled?.());
   _dbg("commandsAsync.pay: " + typeof MiniKit.commandsAsync?.pay);
 } catch(e) {
-  window.__mkReady = false;
+  window.__mkReady = true;
   _dbg("⚠ MiniKit install error: " + e.message);
 }
