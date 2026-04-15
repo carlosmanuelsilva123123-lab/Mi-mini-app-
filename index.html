@@ -5,33 +5,42 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#080808">
 <title>TIME</title>
-<script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/dist/minikit.js"></script>
 <script>
-// DEBUG: panel visible en pantalla
-window._dbg = function(msg) {
-  console.log("[TIME-DBG]", msg);
-  let p = document.getElementById("debug-panel");
-  if (!p) {
-    p = document.createElement("div");
-    p.id = "debug-panel";
-    p.style.cssText = "position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:6px;z-index:9999;max-height:120px;overflow-y:auto;font-family:monospace;border-top:1px solid #0f0";
-    document.body.appendChild(p);
-  }
-  p.innerHTML += "<div>" + String(msg) + "</div>";
-  p.scrollTop = p.scrollHeight;
-};
-window.addEventListener("load", function() {
-  window._dbg("SDK loaded: " + (typeof MiniKit));
+// Shim MiniKit para cuando el SDK no carga (navegador normal)
+// En World App el objeto MiniKit viene inyectado por la propia app
+window.__mkReady = false;
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js@1.6.0/dist/minikit.js"
+  onerror="console.warn('jsdelivr falló, intentando unpkg...');document.write('<script src=https://unpkg.com/@worldcoin/minikit-js@1.6.0/dist/minikit.js><\/script>')">
+</script>
+<script>
+window.addEventListener("DOMContentLoaded", function() {
+  window._dbg = function(msg) {
+    console.log("[DBG]", msg);
+    let p = document.getElementById("debug-panel");
+    if (!p) {
+      p = document.createElement("div");
+      p.id = "debug-panel";
+      p.style.cssText = "position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:6px;z-index:9999;max-height:140px;overflow-y:auto;font-family:monospace;border-top:1px solid #0f0";
+      document.body.appendChild(p);
+    }
+    p.innerHTML += "<div>" + String(msg) + "</div>";
+    p.scrollTop = p.scrollHeight;
+  };
+
+  _dbg("SDK: " + typeof MiniKit);
   if (typeof MiniKit !== "undefined") {
-    window._dbg("MiniKit keys: " + Object.keys(MiniKit).join(","));
-    window._dbg("isInstalled: " + MiniKit.isInstalled?.());
-    window._dbg("commandsAsync: " + (typeof MiniKit.commandsAsync));
-    window._dbg("pay fn: " + (typeof MiniKit.pay));
-    window._dbg("commands: " + (typeof MiniKit.commands));
+    _dbg("Keys: " + Object.keys(MiniKit).slice(0,8).join(","));
+    _dbg("isInstalled: " + MiniKit.isInstalled?.());
+    _dbg("commandsAsync.pay: " + typeof MiniKit.commandsAsync?.pay);
+    _dbg("MiniKit.pay: " + typeof MiniKit.pay);
     try {
       MiniKit.install("app_d8fe914322b26e067cd72b0a5780319a");
-      window._dbg("install OK, isInstalled now: " + MiniKit.isInstalled?.());
-    } catch(e) { window._dbg("install ERROR: " + e.message); }
+      _dbg("install OK → isInstalled: " + MiniKit.isInstalled?.());
+    } catch(e) { _dbg("install ERR: " + e.message); }
+  } else {
+    _dbg("⚠ MiniKit undefined — en navegador normal es normal");
+    _dbg("En World App debería aparecer");
   }
 });
 </script>
@@ -647,12 +656,8 @@ async function sync() {
 }
 
 /* ══════════════════════════════════════════════
-   MINIKIT — instalar inmediato
+   MINIKIT — instalado en script superior
 ══════════════════════════════════════════════ */
-try { if (typeof MiniKit!=="undefined") MiniKit.install(APP_ID); } catch(e) {}
-window.addEventListener("load", () => {
-  try { if (typeof MiniKit!=="undefined" && !MiniKit.isInstalled?.()) MiniKit.install(APP_ID); } catch(_) {}
-});
 
 /* ══════════════════════════════════════════════
    VERIFICAR
@@ -865,7 +870,7 @@ window.cerrarModalOverlay = function(e) {
 };
 
 /* ══════════════════════════════════════════════
-   COMPRAR BOOST — MiniKit Pay (debug + multi-API)
+   COMPRAR BOOST — MiniKit Pay
 ══════════════════════════════════════════════ */
 window.comprar = async function(moneda) {
   const b    = BOOSTS[modalBoostId];
@@ -880,97 +885,87 @@ window.comprar = async function(moneda) {
   btnW.disabled = btnU.disabled = true;
   btnW.textContent = btnU.textContent = "PROCESANDO...";
 
-  _dbg("comprar() llamado, moneda=" + moneda);
-  _dbg("MiniKit type: " + typeof MiniKit);
+  _dbg("comprar moneda=" + moneda + " boost=" + modalBoostId);
+  _dbg("MiniKit=" + typeof MiniKit);
 
   if (typeof MiniKit === "undefined") {
-    _dbg("ERROR: MiniKit undefined");
-    toast("Error: SDK no disponible");
+    _dbg("ERROR: MiniKit no existe");
+    toast("Abre la app en World App");
     resetBtns(); return;
   }
 
-  _dbg("isInstalled: " + MiniKit.isInstalled?.());
-  _dbg("commandsAsync: " + typeof MiniKit.commandsAsync);
-  _dbg("commandsAsync.pay: " + typeof MiniKit.commandsAsync?.pay);
-  _dbg("MiniKit.pay: " + typeof MiniKit.pay);
+  // Intentar install por si acaso no se hizo
+  try { MiniKit.install("app_d8fe914322b26e067cd72b0a5780319a"); } catch(_) {}
 
-  const isWld   = moneda === "wld";
-  const amount  = isWld ? b.wld : b.usdc;
-  const refId   = "time_" + modalBoostId + "_" + (userHash||"anon").slice(-6) + "_" + Date.now();
+  _dbg("isInstalled=" + MiniKit.isInstalled?.());
+  _dbg("commandsAsync.pay=" + typeof MiniKit.commandsAsync?.pay);
 
-  // Calcular token_amount en decimales correctos
-  // WLD = 18 decimales, USDC = 6 decimales
-  const rawNum  = parseFloat(amount);
-  const decimals = isWld ? 18 : 6;
-  const tokenAmt = BigInt(Math.round(rawNum * Math.pow(10, decimals))).toString();
+  const isWld  = moneda === "wld";
+  const symbol = isWld ? "WLD" : "USDCE";
+  const raw    = parseFloat(isWld ? b.wld : b.usdc);
+  // WLD=18 decimales, USDC=6 decimales
+  const dec    = isWld ? 18 : 6;
+  const tokenAmt = BigInt(Math.round(raw * Math.pow(10, dec))).toString();
+  const refId  = "time_" + modalBoostId + "_" + (userHash||"anon").slice(-6) + "_" + Date.now();
 
   const payload = {
     reference:   refId,
     to:          PAYMENT_WALLET,
-    tokens: [{
-      symbol:       isWld ? "WLD" : "USDC",
-      token_amount: tokenAmt,
-    }],
+    tokens: [{ symbol, token_amount: tokenAmt }],
     description: "TIME App — Boost: " + b.name,
   };
 
-  _dbg("payload: " + JSON.stringify(payload));
+  _dbg("payload=" + JSON.stringify(payload));
 
   try {
-    let result;
+    let finalPayload;
 
-    // Intentar nueva API primero: MiniKit.pay()
-    if (typeof MiniKit.pay === "function") {
-      _dbg("Usando MiniKit.pay()");
-      result = await MiniKit.pay(payload);
-      _dbg("result: " + JSON.stringify(result));
-
-    // Fallback: API vieja MiniKit.commandsAsync.pay()
-    } else if (typeof MiniKit.commandsAsync?.pay === "function") {
-      _dbg("Usando commandsAsync.pay()");
+    if (typeof MiniKit.commandsAsync?.pay === "function") {
+      _dbg("usando commandsAsync.pay");
       const r = await MiniKit.commandsAsync.pay(payload);
-      _dbg("result raw: " + JSON.stringify(r));
-      result = r?.finalPayload ?? r;
+      _dbg("resp=" + JSON.stringify(r));
+      finalPayload = r?.finalPayload ?? r;
+
+    } else if (typeof MiniKit.pay === "function") {
+      _dbg("usando MiniKit.pay");
+      const r = await MiniKit.pay(payload);
+      _dbg("resp=" + JSON.stringify(r));
+      finalPayload = r?.data ?? r?.finalPayload ?? r;
 
     } else {
-      _dbg("ERROR: ninguna función pay encontrada");
-      _dbg("Keys MiniKit: " + Object.keys(MiniKit).join(","));
-      toast("Error: función pay no disponible");
+      _dbg("ERROR: ninguna fn pay. Keys=" + Object.keys(MiniKit).join(","));
+      toast("Error: World App no soporta pagos aquí");
       resetBtns(); return;
     }
 
-    // Detectar éxito en cualquier formato de respuesta
-    const data = result?.data ?? result?.finalPayload ?? result;
-    _dbg("data final: " + JSON.stringify(data));
+    _dbg("finalPayload=" + JSON.stringify(finalPayload));
 
-    const exito = result?.executedWith === "minikit"
-      || data?.status === "success"
-      || data?.transactionId
-      || data?.transaction_hash
-      || data?.transaction_id;
+    const exito = finalPayload?.status === "success"
+      || finalPayload?.transactionId
+      || finalPayload?.transaction_id
+      || finalPayload?.transaction_hash;
 
     if (exito) {
-      const txHash = data?.transactionId || data?.transaction_id || data?.transaction_hash || "";
-      registrarPago({ ref:refId, boost:modalBoostId, moneda, amount, token:isWld?"WLD":"USDC", txHash, usuario:userHash, ts:Date.now() });
+      const txHash = finalPayload?.transaction_hash || finalPayload?.transactionId || finalPayload?.transaction_id || "";
+      registrarPago({ ref:refId, boost:modalBoostId, moneda, amount:raw.toString(), token:symbol, txHash, usuario:userHash, ts:Date.now() });
       activarBoost(modalBoostId);
       cerrarModal();
       toast("✓ " + b.name + " ACTIVADO");
       sync();
 
-    } else if (data?.error_code || data?.status === "error") {
-      const code = data?.error_code || data?.status || "error";
-      _dbg("Pago fallido: " + code);
-      toast("Pago fallido: " + code);
+    } else if (finalPayload?.status === "error" || finalPayload?.error_code) {
+      _dbg("Pago error: " + (finalPayload?.error_code || finalPayload?.status));
+      toast("Pago fallido: " + (finalPayload?.error_code || "error"));
       resetBtns();
 
     } else {
-      _dbg("Cancelado o resultado desconocido");
+      _dbg("Cancelado. status=" + finalPayload?.status);
       toast("Pago cancelado");
       resetBtns();
     }
 
   } catch(e) {
-    _dbg("EXCEPCION: " + e.message + " | " + e.stack);
+    _dbg("EXCEPCION: " + e.message);
     toast("Error: " + e.message);
     resetBtns();
   }
