@@ -5,12 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#080808">
 <title>TIME</title>
-<script>
-// Shim MiniKit para cuando el SDK no carga (navegador normal)
-// En World App el objeto MiniKit viene inyectado por la propia app
-window.__mkReady = false;
-</script>
-<script type="module" src="/main.js"></script>
+
+<!-- ✅ FIX #1: MiniKit cargado desde CDN como script clásico (no module)
+     Esto lo expone en window.MiniKit directamente, sin problemas de scope -->
+<script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js@latest/dist/umd/index.js"></script>
+
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap');
 
@@ -61,7 +60,6 @@ body{font-family:'Space Mono',monospace;background:var(--bg);color:#fff;min-heig
 .timer-num{font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--gold);letter-spacing:3px;line-height:1}
 .timer-label{font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-top:4px}
 
-/* Boost activo en timer */
 .boost-badge{font-size:11px;font-weight:700;letter-spacing:1px;margin-top:6px;padding:3px 10px;border-radius:99px}
 .boost-badge.fire{color:#ff6b35;background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.3)}
 .boost-badge.hidden{display:none}
@@ -92,13 +90,11 @@ body{font-family:'Space Mono',monospace;background:var(--bg);color:#fff;min-heig
 .boost-section-title{font-size:9px;color:var(--text-dim);letter-spacing:4px;width:100%;margin:16px 0 10px;padding-bottom:8px;border-bottom:1px solid #1a1a1a}
 .boost-section-title:first-child{margin-top:0}
 
-/* Tier permanente activo */
 .perm-tier-display{width:100%;background:var(--surface);border:1px solid #1c1c1c;border-radius:14px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
 .perm-tier-left .tier-name{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold);letter-spacing:2px}
 .perm-tier-left .tier-sub{font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-top:2px}
 .perm-tier-right{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--gold);letter-spacing:1px}
 
-/* Boost cards */
 .boost-card{width:100%;background:var(--surface);border:1px solid #1c1c1c;border-radius:14px;padding:14px 16px;margin-bottom:10px;position:relative;overflow:hidden}
 .boost-card.active-boost{border-color:rgba(255,107,53,.4);background:rgba(255,107,53,.04)}
 .boost-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
@@ -110,7 +106,6 @@ body{font-family:'Space Mono',monospace;background:var(--bg);color:#fff;min-heig
 .boost-timer-fill{height:100%;background:linear-gradient(90deg,#ff6b35,#ffaa00);border-radius:99px;transition:width 1s linear}
 .boost-timer-text{font-size:10px;color:#ff6b35;letter-spacing:1px;margin-bottom:10px}
 
-/* Botones de compra */
 .buy-row{display:flex;gap:8px}
 .btn-buy{flex:1;border:none;border-radius:10px;padding:10px 0;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;touch-action:manipulation;transition:opacity .2s,transform .1s}
 .btn-buy:active{opacity:.8;transform:scale(.97)}
@@ -118,7 +113,6 @@ body{font-family:'Space Mono',monospace;background:var(--bg);color:#fff;min-heig
 .btn-buy.usdc{background:rgba(76,175,80,.1);color:#26a69a;border:1px solid rgba(76,175,80,.2)}
 .btn-buy:disabled{opacity:.35;cursor:not-allowed;transform:none}
 
-/* owned tier */
 .tier-owned{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--green);letter-spacing:1px;margin-top:4px}
 .tier-owned::before{content:"✓";font-size:12px}
 
@@ -147,6 +141,9 @@ body{font-family:'Space Mono',monospace;background:var(--bg);color:#fff;min-heig
 /* ── TOAST ── */
 .toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(10px);background:#161616;border:1px solid var(--gold-border);color:var(--gold);padding:12px 24px;border-radius:99px;font-size:12px;opacity:0;transition:opacity .3s,transform .3s;z-index:300;white-space:nowrap;letter-spacing:1px;pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── DEBUG ── */
+#debug-panel{position:fixed;bottom:0;left:0;right:0;background:#000;color:#0f0;font-size:10px;padding:6px;z-index:9999;max-height:140px;overflow-y:auto;font-family:monospace;border-top:1px solid #0f0;display:none}
 </style>
 </head>
 <body>
@@ -209,8 +206,6 @@ body{font-family:'Space Mono',monospace;background:var(--bg);color:#fff;min-heig
 
   <!-- TAB BOOST -->
   <div id="tab-boost" class="tab-content">
-
-    <!-- Tier permanente activo -->
     <div class="perm-tier-display">
       <div class="perm-tier-left">
         <div class="tier-name" id="perm-tier-name">SIN TIER</div>
@@ -219,10 +214,8 @@ body{font-family:'Space Mono',monospace;background:var(--bg);color:#fff;min-heig
       <div class="perm-tier-right" id="perm-tier-multi">1x</div>
     </div>
 
-    <!-- Boosts temporales -->
     <div class="boost-section-title">⚡ BOOSTS TEMPORALES</div>
 
-    <!-- SPARK -->
     <div class="boost-card" id="card-spark">
       <div class="boost-card-top">
         <div>
@@ -240,7 +233,6 @@ body{font-family:'Space Mono',monospace;background:var(--bg);color:#fff;min-heig
       </div>
     </div>
 
-    <!-- BLAZE -->
     <div class="boost-card" id="card-blaze">
       <div class="boost-card-top">
         <div>
@@ -258,7 +250,6 @@ body{font-family:'Space Mono',monospace;background:var(--bg);color:#fff;min-heig
       </div>
     </div>
 
-    <!-- INFERNO -->
     <div class="boost-card" id="card-inferno">
       <div class="boost-card-top">
         <div>
@@ -276,10 +267,8 @@ body{font-family:'Space Mono',monospace;background:var(--bg);color:#fff;min-heig
       </div>
     </div>
 
-    <!-- Tiers permanentes -->
     <div class="boost-section-title" style="margin-top:8px">💎 TIERS PERMANENTES</div>
 
-    <!-- TIER I -->
     <div class="boost-card" id="card-tier1">
       <div class="boost-card-top">
         <div>
@@ -296,7 +285,6 @@ body{font-family:'Space Mono',monospace;background:var(--bg);color:#fff;min-heig
       </div>
     </div>
 
-    <!-- TIER II -->
     <div class="boost-card" id="card-tier2">
       <div class="boost-card-top">
         <div>
@@ -313,16 +301,15 @@ body{font-family:'Space Mono',monospace;background:var(--bg);color:#fff;min-heig
       </div>
     </div>
 
-    <!-- TIER III -->
     <div class="boost-card" id="card-tier3">
       <div class="boost-card-top">
         <div>
-          <div class="boost-name" style="color:var(--gold)">◈ TIER III</div>
+          <div class="boost-name" style="color:var(--purple)">◈ TIER III</div>
           <div style="font-size:9px;color:var(--text-dim);letter-spacing:2px">3X PERMANENTE</div>
         </div>
         <div class="boost-multi">3x</div>
       </div>
-      <div class="boost-desc">Triple tasa base permanente. 0.3 TIME/hora de base, siempre.</div>
+      <div class="boost-desc">Triple ganancia base permanente: 0.3 TIME/hora garantizados.</div>
       <div id="tier3-owned" class="tier-owned" style="display:none">YA TIENES ESTE TIER</div>
       <div class="buy-row" id="tier3-buy">
         <button class="btn-buy wld"  onclick="abrirModal('tier3','wld')">2.50 WLD</button>
@@ -330,7 +317,6 @@ body{font-family:'Space Mono',monospace;background:var(--bg);color:#fff;min-heig
       </div>
     </div>
 
-    <!-- TIER IV -->
     <div class="boost-card" id="card-tier4">
       <div class="boost-card-top">
         <div>
@@ -346,7 +332,6 @@ body{font-family:'Space Mono',monospace;background:var(--bg);color:#fff;min-heig
         <button class="btn-buy usdc" onclick="abrirModal('tier4','usdc')">$14.00 USDC</button>
       </div>
     </div>
-
   </div><!-- /tab-boost -->
 
   <!-- TAB BALANCE -->
@@ -388,22 +373,33 @@ body{font-family:'Space Mono',monospace;background:var(--bg);color:#fff;min-heig
 </div>
 
 <div class="toast" id="toast"></div>
+<div id="debug-panel"></div>
 
-<!-- Firebase -->
-<script type="module">
-import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<!-- ✅ FIX #2: Firebase como script clásico (no module) para compartir scope global -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+/* ══════════════════════════════════════════════
+   DEBUG PANEL
+══════════════════════════════════════════════ */
+function _dbg(msg) {
+  console.log("[DBG]", msg);
+  const p = document.getElementById("debug-panel");
+  if (p) {
+    p.style.display = "block";
+    p.innerHTML += "<div>" + String(msg) + "</div>";
+    p.scrollTop = p.scrollHeight;
+  }
+}
 
 /* ══════════════════════════════════════════════
    CONFIG
 ══════════════════════════════════════════════ */
-const APP_ID       = "app_d8fe914322b26e067cd72b0a5780319a";
-const ACTION_ID    = "verificacion-time";
-const BASE_RATE    = 0.1 / 3600; // TIME por segundo sin boosts
-const SYNC_CADA    = 10;
-
-// Wallet receptora de pagos (reemplaza con la tuya)
+const APP_ID        = "app_d8fe914322b26e067cd72b0a5780319a";
+const ACTION_ID     = "verificacion-time";
+const BASE_RATE     = 0.1 / 3600;
+const SYNC_CADA     = 10;
 const PAYMENT_WALLET = "0xbfab37c6703e853944696dc9400be77f3878df7b";
 
 const firebaseConfig = {
@@ -416,29 +412,48 @@ const firebaseConfig = {
 };
 
 /* ══════════════════════════════════════════════
+   FIREBASE INIT (compat SDK — sin import)
+══════════════════════════════════════════════ */
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+/* ══════════════════════════════════════════════
+   ✅ FIX #3: MINIKIT — instalado aquí, mismo scope global
+══════════════════════════════════════════════ */
+let __mkReady = false;
+try {
+  // El CDN expone MiniKitJs o window.MiniKit según la versión
+  const MK = window.MiniKitJs || window.MiniKit;
+  if (MK) {
+    MK.install(APP_ID);
+    window.MiniKit = MK;
+    __mkReady = true;
+    _dbg("✓ MiniKit instalado OK");
+    _dbg("isInstalled: " + (MK.isInstalled?.() ?? "n/a"));
+  } else {
+    _dbg("⚠ MiniKit no encontrado en window — ejecuta desde World App");
+  }
+} catch(e) {
+  _dbg("⚠ MiniKit install error: " + e.message);
+}
+
+/* ══════════════════════════════════════════════
    CATÁLOGO DE BOOSTS
 ══════════════════════════════════════════════ */
 const BOOSTS = {
-  // Temporales
-  spark:   { name:"SPARK",   sub:"2X · 1 HORA",       multi:2,  durMs:1*3600*1000, wld:"0.05", usdc:"0.10", tipo:"temp" },
-  blaze:   { name:"BLAZE",   sub:"5X · 3 HORAS",      multi:5,  durMs:3*3600*1000, wld:"0.10", usdc:"0.25", tipo:"temp" },
-  inferno: { name:"INFERNO", sub:"10X · 6 HORAS",     multi:10, durMs:6*3600*1000, wld:"0.18", usdc:"0.50", tipo:"temp" },
-  // Permanentes
-  tier1:   { name:"TIER I",  sub:"1.5X PERMANENTE",   multi:1.5, wld:"0.50",  usdc:"1.50",  tipo:"perm" },
-  tier2:   { name:"TIER II", sub:"2X PERMANENTE",     multi:2,   wld:"1.20",  usdc:"3.50",  tipo:"perm" },
-  tier3:   { name:"TIER III", sub:"3X PERMANENTE",   multi:3,   wld:"2.50",  usdc:"7.00",  tipo:"perm" },
-  tier4:   { name:"TIER IV", sub:"5X PERMANENTE",     multi:5,   wld:"5.00",  usdc:"14.00", tipo:"perm" },
+  spark:   { name:"SPARK",    sub:"2X · 1 HORA",      multi:2,   durMs:1*3600*1000, wld:"0.05", usdc:"0.10",  tipo:"temp" },
+  blaze:   { name:"BLAZE",    sub:"5X · 3 HORAS",     multi:5,   durMs:3*3600*1000, wld:"0.10", usdc:"0.25",  tipo:"temp" },
+  inferno: { name:"INFERNO",  sub:"10X · 6 HORAS",    multi:10,  durMs:6*3600*1000, wld:"0.18", usdc:"0.50",  tipo:"temp" },
+  tier1:   { name:"TIER I",   sub:"1.5X PERMANENTE",  multi:1.5, wld:"0.50",  usdc:"1.50",  tipo:"perm" },
+  tier2:   { name:"TIER II",  sub:"2X PERMANENTE",    multi:2,   wld:"1.20",  usdc:"3.50",  tipo:"perm" },
+  tier3:   { name:"TIER III", sub:"3X PERMANENTE",    multi:3,   wld:"2.50",  usdc:"7.00",  tipo:"perm" },
+  tier4:   { name:"TIER IV",  sub:"5X PERMANENTE",    multi:5,   wld:"5.00",  usdc:"14.00", tipo:"perm" },
 };
-
-// Orden de tiers (mayor tier gana)
 const TIER_ORDER = ["tier4","tier3","tier2","tier1"];
 
 /* ══════════════════════════════════════════════
    ESTADO
 ══════════════════════════════════════════════ */
-const fbApp = initializeApp(firebaseConfig);
-const db    = getFirestore(fbApp);
-
 let segundos    = 0;
 let earnedToday = 0;
 let earnedTotal = 0;
@@ -448,27 +463,20 @@ let timerInterval = null;
 let segsSinSync   = 0;
 let inicioReal    = null;
 let guardando     = false;
-
-// Estado de boosts
-let boostState = {
-  // Temporales: { expireAt: timestamp ms } o null
-  spark:   null,
-  blaze:   null,
-  inferno: null,
-  // Permanentes: true/false
-  tier1: false, tier2: false, tier3: false, tier4: false,
-};
-
-// Modal
 let modalBoostId  = null;
 let modalMoneda   = null;
+
+let boostState = {
+  spark:null, blaze:null, inferno:null,
+  tier1:false, tier2:false, tier3:false, tier4:false,
+};
 
 /* ══════════════════════════════════════════════
    HELPERS
 ══════════════════════════════════════════════ */
 const pad   = n => String(n).padStart(2,"0");
 const setEl = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
-const lsKey = h => "time_bk_" + h;
+const lsKey      = h => "time_bk_" + h;
 const lsBoostKey = h => "time_boost_" + h;
 
 function toast(msg) {
@@ -476,7 +484,6 @@ function toast(msg) {
   t.textContent = msg; t.classList.add("show");
   setTimeout(() => t.classList.remove("show"), 3000);
 }
-window.mostrarToast = toast;
 
 function getDeviceId() {
   let id = localStorage.getItem("time_device_id");
@@ -488,16 +495,14 @@ function getDeviceId() {
 }
 
 /* ══════════════════════════════════════════════
-   CÁLCULO DE MULTIPLICADOR ACTUAL
+   MULTIPLICADORES
 ══════════════════════════════════════════════ */
 function getMultiplicador() {
   const now = Date.now();
-  // Permanente: el mayor tier que tenga
   let permMulti = 1;
   for (const tid of TIER_ORDER) {
     if (boostState[tid]) { permMulti = BOOSTS[tid].multi; break; }
   }
-  // Temporal: el mayor activo
   let tempMulti = 1;
   for (const tid of ["inferno","blaze","spark"]) {
     if (boostState[tid] && boostState[tid].expireAt > now) {
@@ -516,20 +521,18 @@ function getActiveTemp() {
 }
 
 function getActivePerm() {
-  for (const tid of TIER_ORDER) {
-    if (boostState[tid]) return tid;
-  }
+  for (const tid of TIER_ORDER) { if (boostState[tid]) return tid; }
   return null;
 }
 
 /* ══════════════════════════════════════════════
-   LOCAL STORAGE — DATOS + BOOSTS
+   LOCAL STORAGE
 ══════════════════════════════════════════════ */
 function guardarLocal() {
   if (!userHash) return;
   try {
     localStorage.setItem(lsKey(userHash), JSON.stringify({
-      total: earnedTotal, today: earnedToday, streak,
+      total:earnedTotal, today:earnedToday, streak,
       lastDate: new Date().toDateString()
     }));
     localStorage.setItem(lsBoostKey(userHash), JSON.stringify(boostState));
@@ -541,7 +544,7 @@ function cargarLocal(hash) {
     const raw = localStorage.getItem(lsKey(hash));
     if (raw) {
       const d = JSON.parse(raw);
-      const hoy = new Date().toDateString();
+      const hoy  = new Date().toDateString();
       const ayer = new Date(); ayer.setDate(ayer.getDate()-1);
       earnedTotal = d.total || 0;
       if (d.lastDate === hoy) {
@@ -552,15 +555,12 @@ function cargarLocal(hash) {
         streak = d.lastDate === ayer.toDateString() ? (d.streak||1)+1 : 1;
       }
     }
-    // Cargar boosts
     const rawB = localStorage.getItem(lsBoostKey(hash));
     if (rawB) {
       const b = JSON.parse(rawB);
-      // Limpiar temporales expirados al cargar
       const now = Date.now();
       for (const tid of ["spark","blaze","inferno"]) {
-        if (b[tid] && b[tid].expireAt > now) boostState[tid] = b[tid];
-        else boostState[tid] = null;
+        boostState[tid] = (b[tid] && b[tid].expireAt > now) ? b[tid] : null;
       }
       for (const tid of ["tier1","tier2","tier3","tier4"]) {
         boostState[tid] = !!b[tid];
@@ -570,15 +570,15 @@ function cargarLocal(hash) {
 }
 
 /* ══════════════════════════════════════════════
-   FIREBASE SYNC
+   FIREBASE SYNC (compat SDK)
 ══════════════════════════════════════════════ */
 async function syncFirebaseBg(hash) {
   const hoy  = new Date().toDateString();
   const ayer = new Date(); ayer.setDate(ayer.getDate()-1);
   try {
-    const ref  = doc(db,"usuarios",hash);
-    const snap = await getDoc(ref);
-    if (snap.exists()) {
+    const ref  = db.collection("usuarios").doc(hash);
+    const snap = await ref.get();
+    if (snap.exists) {
       const d = snap.data();
       if ((d.total||0) > earnedTotal) {
         earnedTotal = d.total;
@@ -589,7 +589,6 @@ async function syncFirebaseBg(hash) {
           streak = d.lastDate === ayer.toDateString() ? (d.streak||1)+1 : streak;
         }
       }
-      // Restaurar boosts desde Firebase si hay
       if (d.boosts) {
         const b = d.boosts, now = Date.now();
         for (const tid of ["spark","blaze","inferno"]) {
@@ -602,9 +601,10 @@ async function syncFirebaseBg(hash) {
       }
       actualizarUI();
     } else {
-      await setDoc(ref, {
+      await ref.set({
         total:earnedTotal, today:earnedToday, streak,
-        lastDate:hoy, boosts:boostState, creadoEn:serverTimestamp()
+        lastDate:hoy, boosts:boostState,
+        creadoEn: firebase.firestore.FieldValue.serverTimestamp()
       });
     }
   } catch(e) { console.warn("[TIME] Firebase bg:", e); }
@@ -615,60 +615,71 @@ async function sync() {
   if (!userHash || guardando) return;
   guardando = true;
   try {
-    const snap = { total:earnedTotal, today:earnedToday, streak,
-      lastDate:new Date().toDateString(), boosts:boostState, ultimaSync:serverTimestamp() };
-    await setDoc(doc(db,"usuarios",userHash), snap, { merge:true });
+    await db.collection("usuarios").doc(userHash).set({
+      total:earnedTotal, today:earnedToday, streak,
+      lastDate: new Date().toDateString(),
+      boosts: boostState,
+      ultimaSync: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge:true });
   } catch(e) { console.warn("[TIME] sync:", e); }
   finally { guardando = false; }
 }
 
 /* ══════════════════════════════════════════════
-   MINIKIT — instalado en script superior
-══════════════════════════════════════════════ */
-
-/* ══════════════════════════════════════════════
    VERIFICAR
 ══════════════════════════════════════════════ */
-window.verificar = async function() {
+async function verificar() {
   const btn = document.getElementById("btn-verify");
   const err = document.getElementById("error-msg");
   btn.textContent = "VERIFICANDO..."; btn.disabled = true; err.textContent = "";
   await new Promise(r => setTimeout(r, 80));
-  const mkOk = typeof MiniKit!=="undefined" && MiniKit.isInstalled?.();
+
+  const mk = window.MiniKit;
+  const mkOk = mk && mk.isInstalled?.();
+
+  _dbg("verificar: mkOk=" + mkOk);
+  _dbg("MiniKit type=" + typeof mk);
 
   if (!mkOk) {
-    const wallet = typeof MiniKit!=="undefined" ? MiniKit?.user?.walletAddress : null;
+    // Fuera de World App: modo demo
+    const wallet = mk?.user?.walletAddress || null;
     userHash = wallet || getDeviceId();
-    cargarLocal(userHash); entrarApp(!!wallet); syncFirebaseBg(userHash);
+    cargarLocal(userHash);
+    entrarApp(!!wallet);
+    syncFirebaseBg(userHash);
     return;
   }
+
   try {
-    if (typeof MiniKit.commandsAsync?.verify !== "function") {
-      userHash = MiniKit?.user?.walletAddress || getDeviceId();
+    if (typeof mk.commandsAsync?.verify !== "function") {
+      userHash = mk?.user?.walletAddress || getDeviceId();
       cargarLocal(userHash); entrarApp(true); syncFirebaseBg(userHash);
       return;
     }
     const resp = await Promise.race([
-      MiniKit.commandsAsync.verify({ action:ACTION_ID, signal:"", verification_level:"orb" }),
+      mk.commandsAsync.verify({ action:ACTION_ID, signal:"", verification_level:"orb" }),
       new Promise((_,rej) => setTimeout(()=>rej(new Error("timeout")),20000))
     ]);
     const p = resp?.finalPayload ?? resp;
     if (p?.status==="success") {
       userHash = p.nullifier_hash;
     } else if (p?.error_code==="already_verified") {
-      userHash = p.nullifier_hash || MiniKit?.user?.walletAddress || getDeviceId();
+      userHash = p.nullifier_hash || mk?.user?.walletAddress || getDeviceId();
     } else {
-      userHash = MiniKit?.user?.walletAddress || null;
+      userHash = mk?.user?.walletAddress || null;
     }
   } catch(e) {
-    userHash = MiniKit?.user?.walletAddress || null;
+    _dbg("verify error: " + e.message);
+    userHash = mk?.user?.walletAddress || null;
   }
+
   if (!userHash) {
     userHash = getDeviceId();
     document.getElementById("badge-status").style.display = "none";
   }
   cargarLocal(userHash); entrarApp(true); syncFirebaseBg(userHash);
-};
+}
+window.verificar = verificar;
 
 /* ══════════════════════════════════════════════
    ENTRAR
@@ -682,7 +693,7 @@ function entrarApp(verificado) {
   sync();
   window.addEventListener("beforeunload", () => guardarLocal());
   document.addEventListener("visibilitychange", () => { if (document.hidden) sync(); });
-  try { MiniKit?.subscribe?.("miniapp-close", () => sync()); } catch(_) {}
+  try { window.MiniKit?.subscribe?.("miniapp-close", () => sync()); } catch(_) {}
 }
 
 /* ══════════════════════════════════════════════
@@ -703,7 +714,7 @@ function iniciarTimer() {
 }
 
 /* ══════════════════════════════════════════════
-   UI — ACTUALIZAR TODO
+   UI
 ══════════════════════════════════════════════ */
 function actualizarUI() {
   const m = Math.floor(segundos/60), s = segundos%60;
@@ -718,18 +729,12 @@ function actualizarUI() {
   setEl("earned-total",    earnedTotal.toFixed(4));
   setEl("balance-display", earnedTotal.toFixed(4));
   setEl("hist-today",      "+"+earnedToday.toFixed(4)+" TIME");
-  // hist-yesterday comes from Firebase/localStorage on load; keep static display
-  const ayer2 = new Date(); ayer2.setDate(ayer2.getDate()-1);
-  const rawY = localStorage.getItem("time_bk_" + (userHash||""));
-  if (!rawY) setEl("hist-yesterday", "+0.0000 TIME");
   setEl("streak-val",      streak);
   setEl("rate-display",    rateActual);
 
-  // Color tasa si boost activo
   const rateEl = document.getElementById("rate-display");
   if (rateEl) rateEl.className = "stat-val" + (multi>1 ? " boosted" : "");
 
-  // Badge boost en timer
   const badge = document.getElementById("active-boost-badge");
   const activeTemp = getActiveTemp();
   if (activeTemp && badge) {
@@ -739,67 +744,57 @@ function actualizarUI() {
     badge.classList.add("hidden");
   }
 
-  // Status pill
   const activePerm = getActivePerm();
-  if (activeTemp) {
-    setEl("status-text", "⚡ BOOST ACTIVO "+multi+"x");
-  } else if (activePerm) {
-    setEl("status-text", "◈ "+BOOSTS[activePerm].name+" ACTIVO");
-  } else {
-    setEl("status-text", "ACUMULANDO TIME...");
-  }
+  if (activeTemp)       setEl("status-text", "⚡ BOOST ACTIVO "+multi+"x");
+  else if (activePerm)  setEl("status-text", "◈ "+BOOSTS[activePerm].name+" ACTIVO");
+  else                  setEl("status-text", "ACUMULANDO TIME...");
 
-  // Actualizar cards de boosts
   actualizarBoostCards();
 }
 
 function actualizarBoostCards() {
   const now = Date.now();
-
-  // Temporales: timers
   for (const tid of ["spark","blaze","inferno"]) {
-    const b = boostState[tid];
-    const barWrap = document.getElementById(tid+"-bar-wrap");
-    const timerEl = document.getElementById(tid+"-timer");
-    const btnW = document.getElementById("btn-"+tid+"-wld");
-    const btnU = document.getElementById("btn-"+tid+"-usdc");
-    const card = document.getElementById("card-"+tid);
+    const b     = boostState[tid];
+    const barW  = document.getElementById(tid+"-bar-wrap");
+    const timer = document.getElementById(tid+"-timer");
+    const btnW  = document.getElementById("btn-"+tid+"-wld");
+    const btnU  = document.getElementById("btn-"+tid+"-usdc");
+    const card  = document.getElementById("card-"+tid);
 
     if (b && b.expireAt > now) {
-      const left = b.expireAt - now;
+      const left  = b.expireAt - now;
       const total = BOOSTS[tid].durMs;
-      const pct = (left/total)*100;
-      const hh = Math.floor(left/3600000);
-      const mm = Math.floor((left%3600000)/60000);
-      const ss = Math.floor((left%60000)/1000);
-      if (barWrap) barWrap.style.display = "block";
-      if (timerEl) { timerEl.style.display="block"; timerEl.textContent = `⏱ ${pad(hh)}:${pad(mm)}:${pad(ss)} restantes`; }
+      const pct   = (left/total)*100;
+      const hh    = Math.floor(left/3600000);
+      const mm    = Math.floor((left%3600000)/60000);
+      const ss    = Math.floor((left%60000)/1000);
+      if (barW)  barW.style.display  = "block";
+      if (timer) { timer.style.display="block"; timer.textContent=`⏱ ${pad(hh)}:${pad(mm)}:${pad(ss)} restantes`; }
       const fill = document.getElementById(tid+"-bar");
-      if (fill) fill.style.width = pct+"%";
-      if (btnW) btnW.disabled = true;
-      if (btnU) btnU.disabled = true;
-      if (card) card.classList.add("active-boost");
+      if (fill)  fill.style.width    = pct+"%";
+      if (btnW)  btnW.disabled  = true;
+      if (btnU)  btnU.disabled  = true;
+      if (card)  card.classList.add("active-boost");
     } else {
-      if (barWrap) barWrap.style.display="none";
-      if (timerEl) timerEl.style.display="none";
-      if (btnW) btnW.disabled = false;
-      if (btnU) btnU.disabled = false;
-      if (card) card.classList.remove("active-boost");
-      if (b) boostState[tid] = null; // expiró
+      if (barW)  barW.style.display  = "none";
+      if (timer) timer.style.display = "none";
+      if (btnW)  btnW.disabled  = false;
+      if (btnU)  btnU.disabled  = false;
+      if (card)  card.classList.remove("active-boost");
+      if (b)     boostState[tid] = null;
     }
   }
 
-  // Permanentes: mostrar owned
   const perm = getActivePerm();
   for (const tid of ["tier1","tier2","tier3","tier4"]) {
-    const owned = document.getElementById(tid+"-owned");
+    const owned  = document.getElementById(tid+"-owned");
     const buyRow = document.getElementById(tid+"-buy");
     const isOwned = boostState[tid];
-    if (owned) owned.style.display = isOwned ? "flex" : "none";
+    if (owned)  owned.style.display  = isOwned ? "flex" : "none";
     if (buyRow) buyRow.style.display = isOwned ? "none" : "flex";
   }
 
-  // Tier display arriba
   if (perm) {
     setEl("perm-tier-name",  BOOSTS[perm].name);
     setEl("perm-tier-multi", BOOSTS[perm].multi+"x");
@@ -810,48 +805,49 @@ function actualizarBoostCards() {
 }
 
 /* ══════════════════════════════════════════════
-   MODAL DE COMPRA
+   MODAL
 ══════════════════════════════════════════════ */
-window.abrirModal = function(boostId, moneda) {
+function abrirModal(boostId, moneda) {
   const b = BOOSTS[boostId];
   modalBoostId = boostId;
   modalMoneda  = moneda;
-
-  setEl("modal-title",    b.name);
-  setEl("modal-sub",      b.sub);
+  setEl("modal-title",      b.name);
+  setEl("modal-sub",        b.sub);
   setEl("modal-price-wld",  b.wld + " WLD");
   setEl("modal-price-usdc", "$" + b.usdc + " USDC");
 
-  // Mostrar wallet si disponible
-  const wallet = typeof MiniKit!=="undefined" ? MiniKit?.user?.walletAddress : null;
+  const wallet = window.MiniKit?.user?.walletAddress || null;
   const wRow = document.getElementById("modal-wallet-row");
   if (wallet && wRow) {
     wRow.style.display = "flex";
     setEl("modal-wallet-addr", wallet.slice(0,6)+"..."+wallet.slice(-4));
   }
 
-  // Highlight botón seleccionado
   document.getElementById("modal-btn-wld").style.opacity  = moneda==="wld"  ? "1" : "0.5";
   document.getElementById("modal-btn-usdc").style.opacity = moneda==="usdc" ? "1" : "0.5";
-
   document.getElementById("modal-overlay").classList.add("open");
-};
+}
+window.abrirModal = abrirModal;
 
-window.cerrarModal = function() {
+function cerrarModal() {
   document.getElementById("modal-overlay").classList.remove("open");
-};
+}
+window.cerrarModal = cerrarModal;
 
-window.cerrarModalOverlay = function(e) {
+function cerrarModalOverlay(e) {
   if (e.target === document.getElementById("modal-overlay")) cerrarModal();
-};
+}
+window.cerrarModalOverlay = cerrarModalOverlay;
 
 /* ══════════════════════════════════════════════
-   COMPRAR BOOST — MiniKit Pay
+   ✅ FIX #4: COMPRAR — USDC corregido a "USDC" (no "USDCE")
+   ✅ FIX #5: Lógica unificada en mismo scope, sin problemas de módulo
 ══════════════════════════════════════════════ */
-window.comprar = async function(moneda) {
+async function comprar(moneda) {
   const b    = BOOSTS[modalBoostId];
   const btnW = document.getElementById("modal-btn-wld");
   const btnU = document.getElementById("modal-btn-usdc");
+
   const resetBtns = () => {
     btnW.disabled = btnU.disabled = false;
     btnW.textContent = "PAGAR WLD";
@@ -861,25 +857,30 @@ window.comprar = async function(moneda) {
   btnW.disabled = btnU.disabled = true;
   btnW.textContent = btnU.textContent = "PROCESANDO...";
 
-  _dbg("comprar moneda=" + moneda + " boost=" + modalBoostId);
-  _dbg("MiniKit=" + typeof MiniKit);
+  const mk = window.MiniKit;
+  _dbg("comprar: moneda=" + moneda + " boost=" + modalBoostId);
+  _dbg("MiniKit=" + typeof mk);
 
-  if (typeof MiniKit === "undefined") {
-    _dbg("ERROR: MiniKit no existe");
-    toast("Abre la app en World App");
+  if (!mk) {
+    _dbg("ERROR: MiniKit no existe — abre en World App");
+    toast("Abre la app en World App para pagar");
     resetBtns(); return;
   }
 
-  _dbg("isInstalled=" + MiniKit.isInstalled?.());
-  _dbg("commandsAsync.pay=" + typeof MiniKit.commandsAsync?.pay);
+  if (!mk.isInstalled?.()) {
+    _dbg("ERROR: MiniKit no instalado en World App");
+    toast("Debes usar World App para pagar");
+    resetBtns(); return;
+  }
 
-  const isWld  = moneda === "wld";
-  const symbol = isWld ? "WLD" : "USDCE";
-  const raw    = parseFloat(isWld ? b.wld : b.usdc);
-  // WLD=18 decimales, USDC=6 decimales
-  const dec    = isWld ? 18 : 6;
+  const isWld   = moneda === "wld";
+  // ✅ FIX #4: "USDC" es el símbolo correcto en Worldchain (no "USDCE")
+  const symbol  = isWld ? "WLD" : "USDC";
+  const raw     = parseFloat(isWld ? b.wld : b.usdc);
+  // WLD = 18 decimales, USDC = 6 decimales
+  const dec     = isWld ? 18 : 6;
   const tokenAmt = BigInt(Math.round(raw * Math.pow(10, dec))).toString();
-  const refId  = "time_" + modalBoostId + "_" + (userHash||"anon").slice(-6) + "_" + Date.now();
+  const refId   = "time_" + modalBoostId + "_" + (userHash||"anon").slice(-6) + "_" + Date.now();
 
   const payload = {
     reference:   refId,
@@ -893,20 +894,20 @@ window.comprar = async function(moneda) {
   try {
     let finalPayload;
 
-    if (typeof MiniKit.commandsAsync?.pay === "function") {
+    if (typeof mk.commandsAsync?.pay === "function") {
       _dbg("usando commandsAsync.pay");
-      const r = await MiniKit.commandsAsync.pay(payload);
+      const r = await mk.commandsAsync.pay(payload);
       _dbg("resp=" + JSON.stringify(r));
       finalPayload = r?.finalPayload ?? r;
 
-    } else if (typeof MiniKit.pay === "function") {
+    } else if (typeof mk.pay === "function") {
       _dbg("usando MiniKit.pay");
-      const r = await MiniKit.pay(payload);
+      const r = await mk.pay(payload);
       _dbg("resp=" + JSON.stringify(r));
       finalPayload = r?.data ?? r?.finalPayload ?? r;
 
     } else {
-      _dbg("ERROR: ninguna fn pay. Keys=" + Object.keys(MiniKit).join(","));
+      _dbg("ERROR: ninguna función pay. Keys=" + Object.keys(mk).join(","));
       toast("Error: World App no soporta pagos aquí");
       resetBtns(); return;
     }
@@ -927,7 +928,7 @@ window.comprar = async function(moneda) {
       sync();
 
     } else if (finalPayload?.status === "error" || finalPayload?.error_code) {
-      _dbg("Pago error: " + (finalPayload?.error_code || finalPayload?.status));
+      _dbg("Pago error: " + (finalPayload?.error_code || "error"));
       toast("Pago fallido: " + (finalPayload?.error_code || "error"));
       resetBtns();
 
@@ -942,31 +943,32 @@ window.comprar = async function(moneda) {
     toast("Error: " + e.message);
     resetBtns();
   }
-};
+}
+window.comprar = comprar;
 
 /* ══════════════════════════════════════════════
-   REGISTRAR PAGO EN FIREBASE (auditoría)
+   REGISTRAR PAGO EN FIREBASE
 ══════════════════════════════════════════════ */
 async function registrarPago(datos) {
   try {
-    const pagoRef = doc(db, "pagos", datos.ref);
-    await setDoc(pagoRef, { ...datos, creadoEn: serverTimestamp() });
+    await db.collection("pagos").doc(datos.ref).set({
+      ...datos,
+      creadoEn: firebase.firestore.FieldValue.serverTimestamp()
+    });
   } catch(e) { console.warn("[TIME] registrarPago:", e); }
 }
 
 /* ══════════════════════════════════════════════
-   ACTIVAR BOOST (post-pago)
+   ACTIVAR BOOST
 ══════════════════════════════════════════════ */
 function activarBoost(boostId) {
   const b = BOOSTS[boostId];
   if (b.tipo === "temp") {
     const now = Date.now();
-    // Si ya tiene uno activo, extiende el tiempo
-    const ya = boostState[boostId];
+    const ya  = boostState[boostId];
     const base = (ya && ya.expireAt > now) ? ya.expireAt : now;
     boostState[boostId] = { expireAt: base + b.durMs };
   } else {
-    // Permanente: solo activa el más alto que no tenga
     boostState[boostId] = true;
   }
   guardarLocal();
@@ -976,7 +978,7 @@ function activarBoost(boostId) {
 /* ══════════════════════════════════════════════
    TABS
 ══════════════════════════════════════════════ */
-window.switchTab = function(tab) {
+function switchTab(tab) {
   const TABS = ["earn","boost","balance","info"];
   document.querySelectorAll(".tab").forEach((t,i) =>
     t.classList.toggle("active", TABS[i]===tab));
@@ -984,9 +986,12 @@ window.switchTab = function(tab) {
     c.classList.remove("active"));
   document.getElementById("tab-"+tab)?.classList.add("active");
   if (tab==="boost") actualizarBoostCards();
-};
+}
+window.switchTab = switchTab;
 
-window.retirar = () => toast("Retiro disponible próximamente");
+function retirar() { toast("Retiro disponible próximamente"); }
+window.retirar = retirar;
+
 </script>
 </body>
 </html>
