@@ -31,13 +31,16 @@ window.addEventListener("DOMContentLoaded", function() {
   _dbg("SDK: " + typeof MiniKit);
   if (typeof MiniKit !== "undefined") {
     _dbg("Keys: " + Object.keys(MiniKit).slice(0,8).join(","));
-    _dbg("isInstalled: " + MiniKit.isInstalled?.());
-    _dbg("commandsAsync.pay: " + typeof MiniKit.commandsAsync?.pay);
-    _dbg("MiniKit.pay: " + typeof MiniKit.pay);
     try {
       MiniKit.install("app_d8fe914322b26e067cd72b0a5780319a");
+      window.__mkReady = true;
       _dbg("install OK → isInstalled: " + MiniKit.isInstalled?.());
-    } catch(e) { _dbg("install ERR: " + e.message); }
+      _dbg("commandsAsync.pay: " + typeof MiniKit.commandsAsync?.pay);
+      _dbg("MiniKit.pay: " + typeof MiniKit.pay);
+    } catch(e) {
+      window.__mkReady = false;
+      _dbg("install ERR: " + e.message);
+    }
   } else {
     _dbg("⚠ MiniKit undefined — en navegador normal es normal");
     _dbg("En World App debería aparecer");
@@ -459,7 +462,7 @@ const BOOSTS = {
   // Permanentes
   tier1:   { name:"TIER I",  sub:"1.5X PERMANENTE",   multi:1.5, wld:"0.50",  usdc:"1.50",  tipo:"perm" },
   tier2:   { name:"TIER II", sub:"2X PERMANENTE",     multi:2,   wld:"1.20",  usdc:"3.50",  tipo:"perm" },
-  tier3:   { name:"TIER III","sub":"3X PERMANENTE",   multi:3,   wld:"2.50",  usdc:"7.00",  tipo:"perm" },
+  tier3:   { name:"TIER III", sub:"3X PERMANENTE",   multi:3,   wld:"2.50",  usdc:"7.00",  tipo:"perm" },
   tier4:   { name:"TIER IV", sub:"5X PERMANENTE",     multi:5,   wld:"5.00",  usdc:"14.00", tipo:"perm" },
 };
 
@@ -676,6 +679,11 @@ window.verificar = async function() {
     return;
   }
   try {
+    if (typeof MiniKit.commandsAsync?.verify !== "function") {
+      userHash = MiniKit?.user?.walletAddress || getDeviceId();
+      cargarLocal(userHash); entrarApp(true); syncFirebaseBg(userHash);
+      return;
+    }
     const resp = await Promise.race([
       MiniKit.commandsAsync.verify({ action:ACTION_ID, signal:"", verification_level:"orb" }),
       new Promise((_,rej) => setTimeout(()=>rej(new Error("timeout")),20000))
@@ -746,6 +754,10 @@ function actualizarUI() {
   setEl("earned-total",    earnedTotal.toFixed(4));
   setEl("balance-display", earnedTotal.toFixed(4));
   setEl("hist-today",      "+"+earnedToday.toFixed(4)+" TIME");
+  // hist-yesterday comes from Firebase/localStorage on load; keep static display
+  const ayer2 = new Date(); ayer2.setDate(ayer2.getDate()-1);
+  const rawY = localStorage.getItem("time_bk_" + (userHash||""));
+  if (!rawY) setEl("hist-yesterday", "+0.0000 TIME");
   setEl("streak-val",      streak);
   setEl("rate-display",    rateActual);
 
@@ -893,9 +905,6 @@ window.comprar = async function(moneda) {
     toast("Abre la app en World App");
     resetBtns(); return;
   }
-
-  // Intentar install por si acaso no se hizo
-  try { MiniKit.install("app_d8fe914322b26e067cd72b0a5780319a"); } catch(_) {}
 
   _dbg("isInstalled=" + MiniKit.isInstalled?.());
   _dbg("commandsAsync.pay=" + typeof MiniKit.commandsAsync?.pay);
