@@ -1,3 +1,5 @@
+alert("¿Dentro iframe?: " + (window.self !== window.top));
+alert("URL: " + window.location.href);
 import MiniKit from "https://esm.sh/@worldcoin/minikit-js";
 
 (async () => {
