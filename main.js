@@ -2,6 +2,7 @@
    TIME APP — main.js unificado
    MiniKit se instala PRIMERO, luego Firebase y lógica
 ══════════════════════════════════════════════ */
+window.addEventListener("load", () => {
 const sdk = window.MiniKit
 console.log("SDK:",sdk)
 import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
