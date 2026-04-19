@@ -6,7 +6,8 @@ window.MiniKit = MiniKit;
 // 👇 Inicializar MiniKit
 async function initMiniKit() {
   try {
-    await MiniKit.install();
+    await MiniKit.install();console.log("MiniKit:", MiniKit);
+console.log("commands:", MiniKit?.commands);
     console.log("✅ MiniKit listo");
   } catch (e) {
     console.error("❌ Error MiniKit:", e);
