@@ -2,35 +2,30 @@
    TIME APP — main.js unificado
    MiniKit se instala PRIMERO, luego Firebase y lógica
 ══════════════════════════════════════════════ */
-// 🔥 IMPORTS (SIEMPRE ARRIBA)
+// 🔥 IMPORTAR MINIKIT BIEN (OFICIAL)
+import MiniKit from "https://esm.sh/@worldcoin/minikit-js";
+
+// (tus imports de firebase arriba también si quieres)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
-// 🔥 ESPERAR A QUE CARGUE TODO
-window.addEventListener("load", () => {
+window.addEventListener("load", async () => {
 
-  console.log("🔍 Verificando MiniKit...");
+  console.log("🔍 Iniciando MiniKit...");
 
-  // ✅ VALIDACIÓN SEGURA
-  if (!window.MiniKit) {
-    console.error("❌ MiniKit NO está disponible");
-    alert("❌ MiniKit NO detectado\n\nAbre la app dentro de World App correctamente");
-    return;
+  try {
+    // ✅ inicializar
+    await MiniKit.install();
+
+    console.log("✅ MiniKit instalado:", MiniKit);
+    alert("✅ MiniKit OK");
+
+  } catch (err) {
+    console.error("❌ Error MiniKit:", err);
+    alert("❌ MiniKit falló");
   }
 
-  // ✅ SI TODO OK
-  const sdk = window.MiniKit;
-
-  console.log("✅ MiniKit cargado:", sdk);
-  alert("✅ MiniKit OK");
-
-  // 👉 Aquí puedes seguir con tu lógica
-  // ejemplo:
-  // sdk.walletAddress()
-  // sdk.verify()
 });
-
 /* ══════════════════════════════════════════════
    1. INSTALAR MINIKIT — lo primero de todo
 ══════════════════════════════════════════════ */
