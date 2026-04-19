@@ -1,20 +1,41 @@
-alert("¿Dentro iframe?: " + (window.self !== window.top));
-alert("URL: " + window.location.href);
-import MiniKit from "https://esm.sh/@worldcoin/minikit-js";
+import MiniKit from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/+esm";
 
-(async () => {
-  // 🔍 DEBUG CLAVE
-  alert("URL: " + window.location.href);
-  alert("¿Dentro iframe?: " + (window.self !== window.top));
+window.MiniKit = MiniKit; // 👈 importante
 
+async function initMiniKit() {
   try {
     await MiniKit.install();
 
-    alert("✅ MiniKit FUNCIONANDO");
-    console.log("MiniKit:", MiniKit);
+    console.log("✅ MiniKit OK");
+
+    // Puedes mostrar algo en UI en vez de alert
+    document.getElementById("error-msg").innerText = "MiniKit conectado";
 
   } catch (e) {
-    alert("❌ ERROR: No estás dentro de World App REAL");
-    console.error(e);
+    console.error("❌ MiniKit error:", e);
+
+    document.getElementById("error-msg").innerText =
+      "Abre la app dentro de World App";
   }
-})();
+}
+
+initMiniKit();
+window.verificar = async function () {
+  try {
+    const result = await MiniKit.commands.verify();
+
+    console.log("Resultado verify:", result);
+
+    if (result.status === "success") {
+      document.getElementById("screen-verify").style.display = "none";
+      document.getElementById("screen-main").style.display = "flex";
+    } else {
+      document.getElementById("error-msg").innerText = "Verificación fallida";
+    }
+
+  } catch (e) {
+    console.error(e);
+    document.getElementById("error-msg").innerText =
+      "Error verificando World ID";
+  }
+};
