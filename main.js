@@ -2,12 +2,34 @@
    TIME APP — main.js unificado
    MiniKit se instala PRIMERO, luego Firebase y lógica
 ══════════════════════════════════════════════ */
+// 🔥 IMPORTS (SIEMPRE ARRIBA)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+
+// 🔥 ESPERAR A QUE CARGUE TODO
 window.addEventListener("load", () => {
-const sdk = window.MiniKit
-console.log("SDK:",sdk)
-import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  console.log("🔍 Verificando MiniKit...");
+
+  // ✅ VALIDACIÓN SEGURA
+  if (!window.MiniKit) {
+    console.error("❌ MiniKit NO está disponible");
+    alert("❌ MiniKit NO detectado\n\nAbre la app dentro de World App correctamente");
+    return;
+  }
+
+  // ✅ SI TODO OK
+  const sdk = window.MiniKit;
+
+  console.log("✅ MiniKit cargado:", sdk);
+  alert("✅ MiniKit OK");
+
+  // 👉 Aquí puedes seguir con tu lógica
+  // ejemplo:
+  // sdk.walletAddress()
+  // sdk.verify()
+});
 
 /* ══════════════════════════════════════════════
    1. INSTALAR MINIKIT — lo primero de todo
